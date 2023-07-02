@@ -17,14 +17,14 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
       - name: Restore dependencies
-        run: dotnet restore ProjectionTools
+        run: dotnet restore ProjectionTools.sln
       - name: Build
-        run: dotnet build --no-restore ProjectionTools
+        run: dotnet build -c Release --no-restore ProjectionTools.sln
       - name: Test
-        run: dotnet test --no-build --verbosity normal  ProjectionTools
+        run: dotnet test --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
       - name: Pack nugets
-        run: dotnet pack -c Release --no-build --output . ProjectionTools
+        run: dotnet pack -c Release --no-build --output . ProjectionTools/ProjectionTools.csproj
       - name: Push to NuGet
         run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
