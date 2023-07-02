@@ -1,0 +1,3 @@
+[*.cs]
+dotnet_diagnostic.RCS1194.severity = none
+dotnet_diagnostic.CA1307.severity = error

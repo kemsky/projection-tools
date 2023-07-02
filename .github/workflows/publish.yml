@@ -1,0 +1,30 @@
+name: Publish nuget package
+
+on:
+  release:
+    types: 
+    - published
+    branches: 
+    - master
+  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
+      - name: Restore dependencies
+        run: dotnet restore ProjectionTools
+      - name: Build
+        run: dotnet build --no-restore ProjectionTools
+      - name: Test
+        run: dotnet test --no-build --verbosity normal  ProjectionTools
+      - name: Pack nugets
+        run: dotnet pack -c Release --no-build --output . ProjectionTools
+      - name: Push to NuGet
+        run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
