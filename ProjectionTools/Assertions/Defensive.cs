@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace ProjectionTools;
+namespace ProjectionTools.Assertions;
 
 internal sealed class Defensive
 {

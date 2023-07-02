@@ -1,13 +1,9 @@
 ﻿using System.Linq.Expressions;
 using DelegateDecompiler;
+using ProjectionTools.Assertions;
 using ProjectionTools.Expressions;
 
 namespace ProjectionTools.Projections;
-
-internal interface IProjectionExpressionAccessor
-{
-    LambdaExpression GetExpression();
-}
 
 public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 {
@@ -21,16 +17,16 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
     public Projection(Expression<Func<TSource, TResult>> projectionExpression)
     {
-        Defensive.Contract.ArgumentNotNull(projectionExpression);
+        Defensive.Contract.ArgumentNotNull(projectionExpression, nameof(projectionExpression));
 
         _lazyExpression = new Lazy<Expression<Func<TSource, TResult>>>(() => projectionExpression.Rewrite(), LazyThreadSafetyMode.PublicationOnly);
 
         _lazyDelegate = new Lazy<Func<TSource, TResult>>(() => projectionExpression.Rewrite().Compile(), LazyThreadSafetyMode.PublicationOnly);
     }
 
-    public Projection(Expression<Func<TSource, TResult>> projectionExpression, Func<TSource, TResult> projectionDelegate)
+    public Projection(Expression<Func<TSource, TResult>>? projectionExpression, Func<TSource, TResult> projectionDelegate)
     {
-        Defensive.Contract.ArgumentNotNull(projectionDelegate);
+        Defensive.Contract.ArgumentNotNull(projectionDelegate, nameof(projectionDelegate));
 
         _lazyExpression = projectionExpression == null
             ? new Lazy<Expression<Func<TSource, TResult>>>(() => ((Expression<Func<TSource, TResult>>)projectionDelegate.Decompile()).Rewrite(), LazyThreadSafetyMode.PublicationOnly)
@@ -41,8 +37,8 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
     internal Projection(Lazy<Expression<Func<TSource, TResult>>> projectionExpression, Lazy<Func<TSource, TResult>> projectionDelegate)
     {
-        Defensive.Contract.ArgumentNotNull(projectionExpression);
-        Defensive.Contract.ArgumentNotNull(projectionDelegate);
+        Defensive.Contract.ArgumentNotNull(projectionExpression, nameof(projectionExpression));
+        Defensive.Contract.ArgumentNotNull(projectionDelegate, nameof(projectionDelegate));
 
         _lazyExpression = projectionExpression;
 
@@ -51,7 +47,7 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
     public Projection<TProjection, TResult> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>> sourceExpression)
     {
-        Defensive.Contract.ArgumentNotNull(sourceExpression);
+        Defensive.Contract.ArgumentNotNull(sourceExpression, nameof(sourceExpression));
 
         var delegateLocal = Project;
         var expressionLocal = ProjectExpression;
@@ -67,9 +63,9 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
         );
     }
 
-    public Projection<TProjection, TResult> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>> sourceExpression, Func<TProjection, TSource> sourceDelegate)
+    public Projection<TProjection, TResult> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>>? sourceExpression, Func<TProjection, TSource> sourceDelegate)
     {
-        Defensive.Contract.ArgumentNotNull(sourceDelegate);
+        Defensive.Contract.ArgumentNotNull(sourceDelegate, nameof(sourceDelegate));
 
         var delegateLocal = Project;
         var expressionLocal = ProjectExpression;
@@ -88,7 +84,7 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
     public Projection<TProjection, TResult> ApplyTo<TProjection>(Projection<TProjection, TSource> sourceProjection)
     {
-        Defensive.Contract.ArgumentNotNull(sourceProjection);
+        Defensive.Contract.ArgumentNotNull(sourceProjection, nameof(sourceProjection));
 
         var delegateLocal = Project;
         var expressionLocal = ProjectExpression;
@@ -101,7 +97,7 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
     public Projection<TSource, TProjection> To<TProjection>(Expression<Func<TResult, TProjection>> projectionExpression)
     {
-        Defensive.Contract.ArgumentNotNull(projectionExpression);
+        Defensive.Contract.ArgumentNotNull(projectionExpression, nameof(projectionExpression));
 
         var delegateLocal = Project;
         var expressionLocal = ProjectExpression;
@@ -117,9 +113,9 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
         );
     }
 
-    public Projection<TSource, TProjection> To<TProjection>(Expression<Func<TResult, TProjection>> projectionExpression, Func<TResult, TProjection> projectionDelegate)
+    public Projection<TSource, TProjection> To<TProjection>(Expression<Func<TResult, TProjection>>? projectionExpression, Func<TResult, TProjection> projectionDelegate)
     {
-        Defensive.Contract.ArgumentNotNull(projectionDelegate);
+        Defensive.Contract.ArgumentNotNull(projectionDelegate, nameof(projectionDelegate));
 
         var delegateLocal = Project;
         var expressionLocal = ProjectExpression;
@@ -138,7 +134,7 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
     public Projection<TSource, TProjection> To<TProjection>(Projection<TResult, TProjection> projection)
     {
-        Defensive.Contract.ArgumentNotNull(projection);
+        Defensive.Contract.ArgumentNotNull(projection, nameof(projection));
 
         var delegateLocal = Project;
         var expressionLocal = ProjectExpression;
@@ -162,17 +158,5 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     LambdaExpression IProjectionExpressionAccessor.GetExpression()
     {
         return ProjectExpression;
-    }
-}
-
-internal static class ProjectionExpressionExtensions
-{
-    private static readonly ProjectionVisitor ProjectionVisitor = new();
-
-    private static readonly SpecificationVisitor SpecificationVisitor = new();
-
-    public static Expression<Func<TSource, TResult>> Rewrite<TSource, TResult>(this Expression<Func<TSource, TResult>> expression)
-    {
-        return (Expression<Func<TSource, TResult>>)ProjectionVisitor.Visit(SpecificationVisitor.Visit(expression));
     }
 }

@@ -26,7 +26,7 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
 
             var expression = rebindParameter.Visit(body);
 
-            return base.Visit(expression);
+            return Visit(expression)!;
         }
 
         return base.VisitInvocation(node);
@@ -41,7 +41,7 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
             && string.Equals(memberExpression.Member.Name, nameof(Projection<object, object>.Project), StringComparison.Ordinal)
         )
         {
-            return base.Visit(memberExpression.Expression)!;
+            return Visit(memberExpression.Expression)!;
         }
 
         // convert projection members to constants
@@ -51,7 +51,7 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
             && memberExpression.TryEvaluate(out var memberValue)
         )
         {
-            return base.Visit(Expression.Constant(memberValue, memberExpression.Type));
+            return Visit(Expression.Constant(memberValue, memberExpression.Type))!;
         }
 
         return base.VisitMember(memberExpression);
@@ -70,7 +70,7 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
 
             var expression = projection.GetExpression();
 
-            return base.Visit(expression);
+            return Visit(expression)!;
         }
 
         return base.VisitConstant(constantExpression);
@@ -85,7 +85,7 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
             && unaryExpression.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Projection<,>)
         )
         {
-            return base.Visit(unaryExpression.Operand);
+            return Visit(unaryExpression.Operand)!;
         }
 
         return base.VisitUnary(unaryExpression);

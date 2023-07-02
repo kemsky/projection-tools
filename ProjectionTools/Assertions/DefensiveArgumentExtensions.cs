@@ -1,11 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace ProjectionTools;
+namespace ProjectionTools.Assertions;
 
 internal static class DefensiveArgumentExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ArgumentNotNull<T>(this Defensive defensive, T value, [CallerArgumentExpression("value")] string argumentName = null)
+    public static void ArgumentNotNull<T>(this Defensive defensive, T? value, string argumentName)
     {
         if (!(value is object))
         {

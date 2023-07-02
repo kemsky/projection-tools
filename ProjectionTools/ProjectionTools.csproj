@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>11.0</LangVersion>
+    <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
     <Deterministic>true</Deterministic>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -17,6 +18,10 @@
     <RunAnalyzers>true</RunAnalyzers>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <NoWarn>$(NoWarn);nullable</NoWarn>
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="DelegateDecompiler" Version="0.32.0" />
 

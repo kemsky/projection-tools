@@ -1,11 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using ProjectionTools.Assertions;
 
 namespace ProjectionTools.Expressions;
 
 internal static class ExpressionExtensions
 {
-    public static bool TryEvaluate(this Expression expression, out object result)
+    public static bool TryEvaluate(this Expression expression, [MaybeNullWhen(false)] out object result)
     {
         if (expression is MemberExpression memberExpression)
         {
@@ -115,7 +117,7 @@ internal static class ExpressionExtensions
         Expression<Func<TParam, TSource>> parameterExpression
     )
     {
-        var body = new ReplaceParameterVisitor(expression.Parameters[0], parameterExpression.Body).Visit(expression.Body);
+        var body = new ReplaceParameterVisitor(expression.Parameters[0], parameterExpression.Body).Visit(expression.Body)!;
 
         return Expression.Lambda<Func<TParam, TReturn>>(body, parameterExpression.Parameters);
     }
@@ -125,7 +127,7 @@ internal static class ExpressionExtensions
         Expression<Func<TResult, TDestination>> projectionExpression
     )
     {
-        var body = new ReplaceParameterVisitor(projectionExpression.Parameters[0], expression.Body).Visit(projectionExpression.Body);
+        var body = new ReplaceParameterVisitor(projectionExpression.Parameters[0], expression.Body).Visit(projectionExpression.Body)!;
 
         return Expression.Lambda<Func<TSource, TDestination>>(body, expression.Parameters);
     }
@@ -138,7 +140,7 @@ internal static class ExpressionExtensions
     {
         var parameterBody = argumentExpression.Body;
 
-        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody).Visit(expression);
+        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody).Visit(expression)!;
     }
 
     public static TExpression BindArguments<TExpression, TArg1, TArg2>(
@@ -152,14 +154,14 @@ internal static class ExpressionExtensions
         var argument1Body = argument1Expression.Body;
         var argument2Body = argument2Expression.Body;
 
-        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo2, argument2Body).Visit(new ReplaceCapturedArgumentVisitor(parameterInfo1, argument1Body).Visit(expression));
+        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo2, argument2Body).Visit(new ReplaceCapturedArgumentVisitor(parameterInfo1, argument1Body).Visit(expression))!;
     }
 }
 
 #if NETSTANDARD2_0
 internal static class StackExtensions
 {
-    public static bool TryPop<T>(this Stack<T> stack, out T value)
+    public static bool TryPop<T>(this Stack<T> stack, [MaybeNullWhen(false)] out T value)
     {
         if (stack.Count > 0)
         {

@@ -21,6 +21,6 @@ internal sealed class ReplaceParameterVisitor : ExpressionVisitor
             return _replacement;
         }
 
-        return base.Visit(parameterExpression)!;
+        return Visit(parameterExpression)!;
     }
 }

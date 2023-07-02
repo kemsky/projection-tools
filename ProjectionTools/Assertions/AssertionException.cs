@@ -1,4 +1,4 @@
-﻿namespace ProjectionTools;
+﻿namespace ProjectionTools.Assertions;
 
 internal sealed class AssertionException : Exception
 {

@@ -24,7 +24,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
 
             var expression = replaceParameterVisitor.Visit(lambda.Body);
 
-            return base.Visit(expression);
+            return Visit(expression)!;
         }
 
         return base.VisitInvocation(invocationExpression);
@@ -39,7 +39,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(memberExpression.Member.Name, nameof(Specification<object>.IsSatisfiedBy), StringComparison.Ordinal)
         )
         {
-            return base.Visit(memberExpression.Expression)!;
+            return Visit(memberExpression.Expression)!;
         }
 
         // convert spec members to constants
@@ -49,7 +49,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && memberExpression.TryEvaluate(out var memberValue)
         )
         {
-            return base.Visit(Expression.Constant(memberValue, memberExpression.Type));
+            return Visit(Expression.Constant(memberValue, memberExpression.Type))!;
         }
 
         return base.VisitMember(memberExpression);
@@ -73,7 +73,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
 
             var expression = specification.GetExpression();
 
-            return base.Visit(expression);
+            return Visit(expression)!;
         }
 
         return base.VisitConstant(constantExpression);
@@ -89,14 +89,14 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(binaryExpression.Method.Name, "op_BitwiseOr", StringComparison.Ordinal)
         )
         {
-            var arg1 = (LambdaExpression)base.Visit(binaryExpression.Left);
-            var arg2 = (LambdaExpression)base.Visit(binaryExpression.Right);
+            var arg1 = (LambdaExpression)Visit(binaryExpression.Left)!;
+            var arg2 = (LambdaExpression)Visit(binaryExpression.Right)!;
 
             var replaceParameterVisitor = new ReplaceParameterVisitor(arg2.Parameters[0], arg1.Parameters[0]);
 
-            var body = replaceParameterVisitor.Visit(arg2.Body);
+            var body = replaceParameterVisitor.Visit(arg2.Body)!;
 
-            return base.Visit(Expression.Lambda(Expression.Or(arg1.Body, body), arg1.Parameters));
+            return Visit(Expression.Lambda(Expression.Or(arg1.Body, body), arg1.Parameters))!;
         }
 
         // replace And
@@ -107,14 +107,14 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(binaryExpression.Method.Name, "op_BitwiseAnd", StringComparison.Ordinal)
         )
         {
-            var arg1 = (LambdaExpression)base.Visit(binaryExpression.Left);
-            var arg2 = (LambdaExpression)base.Visit(binaryExpression.Right);
+            var arg1 = (LambdaExpression)Visit(binaryExpression.Left)!;
+            var arg2 = (LambdaExpression)Visit(binaryExpression.Right)!;
 
             var replaceParameterVisitor = new ReplaceParameterVisitor(arg2.Parameters[0], arg1.Parameters[0]);
 
-            var body = replaceParameterVisitor.Visit(arg2.Body);
+            var body = replaceParameterVisitor.Visit(arg2.Body)!;
 
-            return base.Visit(Expression.Lambda(Expression.And(arg1.Body, body), arg1.Parameters));
+            return Visit(Expression.Lambda(Expression.And(arg1.Body, body), arg1.Parameters))!;
         }
 
         return base.VisitBinary(binaryExpression);
@@ -130,7 +130,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(unaryExpression.Method.Name, "op_Implicit", StringComparison.Ordinal)
         )
         {
-            return base.Visit(unaryExpression.Operand);
+            return Visit(unaryExpression.Operand)!;
         }
 
         // replace Not operator
@@ -141,9 +141,9 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(unaryExpression.Method.Name, "op_LogicalNot", StringComparison.Ordinal)
         )
         {
-            var expression = (LambdaExpression)base.Visit(unaryExpression.Operand);
+            var expression = (LambdaExpression)Visit(unaryExpression.Operand)!;
 
-            return base.Visit(Expression.Lambda(Expression.Not(expression.Body), expression.Parameters));
+            return Visit(Expression.Lambda(Expression.Not(expression.Body), expression.Parameters))!;
         }
 
         return base.VisitUnary(unaryExpression);
