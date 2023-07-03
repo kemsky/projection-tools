@@ -20,7 +20,7 @@
     <RunAnalyzers>true</RunAnalyzers>
 
     <PackageId>ProjectionTools</PackageId>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageIcon>logo.png</PackageIcon>
     <PackageProjectUrl>https://github.com/kemsky/projection-tools</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../logo.png" Pack="true" PackagePath="\" />
+    <None Include="logo.png" Pack="true" PackagePath="\" />
     <None Include="../README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   
