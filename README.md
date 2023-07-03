@@ -51,7 +51,7 @@ public class DepartmentEntity
 
 public class UserDto
 {
-    public int Name { get; set; }
+    public string Name { get; set; }
 
     public List<DepartmentDto> Departments { get; set; }
 }
@@ -149,7 +149,7 @@ public class DepartmentEntity
 
 public class UserDto
 {
-    public int Name { get; set; }
+    public string Name { get; set; }
 
     public List<DepartmentDto> Departments { get; set; }
 }
