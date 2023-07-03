@@ -35,11 +35,11 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageVersion>1.0.12</PackageVersion>
     <!--  https://stackoverflow.com/questions/41713693/include-pdb-files-into-my-nuget-nupkg-files  -->
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedAllSources>true</EmbedAllSources>
     <IsPackable>true</IsPackable>
+    <PackageVersion>1.0.13</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -53,7 +53,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="DelegateDecompiler" Version="0.32.0" />
+    <PackageReference Include="DelegateDecompiler" Version="[0.32.0,)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
