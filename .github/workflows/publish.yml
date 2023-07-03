@@ -23,8 +23,8 @@ jobs:
       - name: Build
         run: dotnet build -c Release -p:ContinuousIntegrationBuild=true --no-restore ProjectionTools.sln
       - name: Test
-        run: dotnet test -c Release --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
+        run: dotnet test -c Release --no-build --no-restore --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
       - name: Pack nugets
-        run: dotnet pack -c Release -p:ContinuousIntegrationBuild=true --output . ProjectionTools/ProjectionTools.csproj
+        run: dotnet pack -c Release --no-build --no-restore --output . ProjectionTools/ProjectionTools.csproj
       - name: Push nupkg to NuGet
         run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
