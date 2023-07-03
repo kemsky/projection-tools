@@ -4,6 +4,17 @@
 
 This package provides two primitives `Projection<TSource, TResult>` and `Specification<TSource>` for building reusable LINQ projections and predicates.
 
+Package is available on [Nuget](https://www.nuget.org/packages/ProjectionTools/).
+
+Install using dotnet cli:
+```commandline
+dotnet add package ProjectionTools
+```
+Install using package-manager console:
+```commandline
+PM> Install-Package ProjectionTools
+```
+
 ## Projections
 
 My initial goal was to replace packages like AutoMapper and similar.
@@ -16,6 +27,7 @@ The common drawbacks of using mappers:
 - Do not properly separate instance API (mapping object instances) and expression API (mapping through LINQ projections) which leads to bugs in runtime;
 - Bugs: despite all the claims you can not be sure in anything unless you manually test mapping of each field and each scenario (instance/LINQ);
 - Poor testing experience;
+- Compatibility with LINQ providers: AutoMapper has broken compatibility with EF6 for no reason at all;
 
 In the most cases mapping splits into two independent stages:
 
