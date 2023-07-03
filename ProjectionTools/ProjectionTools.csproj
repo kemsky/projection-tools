@@ -26,7 +26,6 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <PackageTags>linq specification projection mapping mapper entity-framework</PackageTags>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/kemsky/projection-tools/master/LICENSE</PackageLicenseUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
