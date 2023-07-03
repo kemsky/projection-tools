@@ -2,12 +2,10 @@
 
   <PropertyGroup>
     <Summary>Primitives for building reusable LINQ projections and specifications/predicates</Summary>
-    <Description>Primitives for building reusable LINQ projections and specifications/predicates</Description>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
-    <Deterministic>true</Deterministic>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors>true</WarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
@@ -19,7 +17,13 @@
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>true</RunAnalyzers>
 
+    <Deterministic>true</Deterministic>
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+
     <PackageId>ProjectionTools</PackageId>
+    <Authors>Alexander Turtsevich</Authors>
+    <Description>Primitives for building reusable LINQ projections and specifications/predicates</Description>
+    <Copyright>Alexander Turtsevich 2023</Copyright>
     <PackageIcon>logo.png</PackageIcon>
     <PackageProjectUrl>https://github.com/kemsky/projection-tools</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kemsky/projection-tools</RepositoryUrl>
@@ -30,8 +34,12 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageVersion>1.0.7</PackageVersion>
+    <PackageVersion>1.0.8</PackageVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="logo.png" Pack="true" PackagePath="\" />
