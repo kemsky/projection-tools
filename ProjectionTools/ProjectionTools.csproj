@@ -21,6 +21,7 @@
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
 
     <PackageId>ProjectionTools</PackageId>
+    <Author>Alexander Turtsevich</Author>
     <Authors>Alexander Turtsevich</Authors>
     <Description>Primitives for building reusable LINQ projections and specifications/predicates</Description>
     <Copyright>Alexander Turtsevich 2023</Copyright>
@@ -34,8 +35,9 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageVersion>1.0.10</PackageVersion>
+    <PackageVersion>1.0.11</PackageVersion>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <EmbedAllSources>true</EmbedAllSources>
   </PropertyGroup>
 
   <ItemGroup>
