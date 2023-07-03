@@ -2,4 +2,7 @@ bin
 obj
 .idea
 
+*.nupkg
+*.snupkg
+
 ProjectionTools.sln.DotSettings.user
