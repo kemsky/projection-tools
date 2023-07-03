@@ -74,7 +74,10 @@ public static class UserProjections
         x => new UserDto
         {
             Name = x.Name,
-            Departments = x.Departments.Where(z => z.Active).Select(DepartmentDtoProjection.Project).ToList()
+            Departments = x.Departments
+                                .Where(z => z.Active)
+                                .Select(DepartmentDtoProjection.Project)
+                                .ToList()
         }
     );
 }
@@ -180,7 +183,10 @@ public static class UserProjections
         x => new UserDto
         {
             Name = x.Name,
-            Departments = x.Departments.Where(ActiveDepartment).Select(DepartmentDtoProjection.Project).ToList()
+            Departments = x.Departments
+                                .Where(ActiveDepartment)
+                                .Select(DepartmentDtoProjection.Project)
+                                .ToList()
         }
     );
 }
