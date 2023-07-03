@@ -21,7 +21,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ProjectionTools.sln
       - name: Build
-        run: dotnet build -c Release --no-restore ProjectionTools.sln
+        run: dotnet build -c Release /p:ContinuousIntegrationBuild=true --no-restore ProjectionTools.sln
       - name: Test
         run: dotnet test -c Release --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
       - name: Pack nugets
