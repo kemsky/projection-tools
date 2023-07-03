@@ -26,5 +26,7 @@ jobs:
         run: dotnet test -c Release --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
       - name: Pack nugets
         run: dotnet pack -c Release --no-build --output . ProjectionTools/ProjectionTools.csproj
-      - name: Push to NuGet
+      - name: Push nupkg to NuGet
         run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+      - name: Push snupkg to NuGet
+        run: dotnet nuget push "*.snupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
