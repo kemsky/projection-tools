@@ -2,15 +2,15 @@
 
 # Projection Tools
 
-This package provides two primitives `Projection<TSource, TResult>` and `Specification<TSource>` for building reusable LINQ projections and predicates.
+This package provides primitives for building reusable LINQ projections and specifications.
 
 Package is available on [Nuget](https://www.nuget.org/packages/ProjectionTools/).
 
-Install using dotnet cli:
+Install using dotnet CLI:
 ```commandline
 dotnet add package ProjectionTools
 ```
-Install using package-manager console:
+Install using Package-Manager console:
 ```commandline
 PM> Install-Package ProjectionTools
 ```
@@ -21,24 +21,67 @@ My initial goal was to replace packages like AutoMapper and similar.
 
 The common drawbacks of using mappers:
 
-- Code "black hole" and dirty magic: IDE can not show code usages, mappings are resolved in runtime;
-- Complex API: API is complex yet limited in many cases;
-- Maintenance costs: authors often change APIs without considering other options;
+- IDE can not show code usages, mappings are resolved in runtime (sometimes source generators are used);
+- API is complex yet limited in many cases;
+- Maintenance costs: authors frequently change APIs without considering other options;
 - Do not properly separate instance API (mapping object instances) and expression API (mapping through LINQ projections) which leads to bugs in runtime;
 - Bugs: despite all the claims you can not be sure in anything unless you manually test mapping of each field and each scenario (instance/LINQ);
-- Poor testing experience;
-- Compatibility with LINQ providers: AutoMapper has broken compatibility with EF6 for no reason at all;
+- Poor testing experience: sometimes you have to create your own "tools" specifically for testing mappings;
+- Compatibility with LINQ providers: e.g. AutoMapper has broken compatibility with EF6 for no reason at all;
 
-In the most cases mapping splits into two independent stages:
+In the most cases mapping splits into two independent scenarios:
 
-- Fetch DTOs directly from DB using automatic projections and pass result to client;
-- Map incoming DTOs to entities to apply changes from client and then save modified entities to DB;
+1. Fetch DTOs from DB using automatic projections;
+2. DTOs to entities and then save modified entities to DB;
 
-In reality mapping from DTO to entity is rarely a good idea: there are validations, access rights, business logic. It means that you end up using custom code in each case.
+In reality direct mapping from DTO to entity is rarely viable: there are validations, access rights, business logic. It means that you end up writing custom code for each save operation. 
 
-`Projection<TSource, TResult>` - provides option to define mapping from entity to DTO.
+In case we want to support only 1st scenario there is no need to deal with complex mapper configurations.
 
-Quick example, controller should return only active users and users should have only active departments:
+`Projection<TSource, TResult>` - provides an option to define reusable mappings.
+
+You can create projection using mapping expression:
+
+```csharp
+    Projection<DepartmentEntity, DepartmentDto> DepartmentDtoProjection = new (
+        x => new DepartmentDto
+        {
+            Name = x.Name
+        }
+    );
+```
+or delegate:
+
+```csharp
+    Projection<DepartmentEntity, DepartmentDto> DepartmentDtoProjection = new (
+        default,
+        x => new DepartmentDto
+        {
+            Name = x.Name
+        }
+    );
+```
+
+or both (e.g. when DB only features are used like DBFunctions, delegate should match DB behavior):
+
+```csharp
+    Projection<DepartmentEntity, DepartmentDto> DepartmentDtoProjection = new (
+        x => new DepartmentDto
+        {
+            Name = x.Name
+        },
+        x => new DepartmentDto
+        {
+            Name = x.Name
+        }
+    );
+```
+
+You can use projections in other projections.
+
+Thanks to `DelegateDecompiler` package and built-in ability to compile expression trees all of the options above will work but with different performance implications.
+
+Full example, controller should return only active users and users should have only active departments:
 
 ```csharp
 public class UserEntity
@@ -129,9 +172,9 @@ public class UserController : Controller
 
 ## Specifications (reusable predicates)
 
-Projection works but we have a problem: we do not reuse `Where(x => x.Active)` checks. There is one predicate in `UserController.GetUser` method and another in `UserDtoProjection`.
+Projections work but we have a problem: we do not reuse `Where(x => x.Active)` checks. There is one predicate in `UserController.GetUser` method and another in `UserDtoProjection`.
 
-This predicate can be more complex, often it is a combination of different predicates depending on business logic.
+This predicates can be more complex, often a combination of different predicates depending on business logic.
 
 There is a well-known specification pattern and there are many existing .NET implementations but they all share similar problems:
 
@@ -139,7 +182,39 @@ There is a well-known specification pattern and there are many existing .NET imp
 - Many intrusive extensions methods that pollute project code;
 - Can only be used in certain contexts;
 
-This is how we can use `Specification<TSource>` to solve these problems:
+`Specification<TSource>` can solve these problems.
+
+You can create specification using expression:
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active
+    );
+```
+or delegate:
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        default,
+        x => x.Active
+    );
+```
+or both (e.g. when DB has case-insensitive collation, delegate should match DB behavior):
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active,
+        x => x.Active
+    );
+```
+
+You can also combine specifications (using `&&`, `||`,`!`):
+```csharp
+    Specification<DepartmentEntity> CustomerServiceDepartment = new (
+        x => x.Name == "Customer Service"
+    );
+    
+    Specification<DepartmentEntity> ActiveCustomerServiceDepartment =  ActiveDepartment && CustomerServiceDepartment;
+```
+
+Full example:
 
 ```csharp
 public class UserEntity

@@ -24,7 +24,7 @@
     <Author>Alexander Turtsevich</Author>
     <Authors>Alexander Turtsevich</Authors>
     <Description>Primitives for building reusable LINQ projections and specifications/predicates</Description>
-    <Copyright>Alexander Turtsevich 2023</Copyright>
+    <Copyright>Copyright © Alexander Turtsevich 2023</Copyright>
     <PackageIcon>logo.png</PackageIcon>
     <PackageProjectUrl>https://github.com/kemsky/projection-tools</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kemsky/projection-tools</RepositoryUrl>
