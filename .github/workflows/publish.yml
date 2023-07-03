@@ -23,7 +23,7 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore ProjectionTools.sln
       - name: Test
-        run: dotnet test --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
+        run: dotnet test -c Release --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
       - name: Pack nugets
         run: dotnet pack -c Release --no-build --output . ProjectionTools/ProjectionTools.csproj
       - name: Push to NuGet

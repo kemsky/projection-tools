@@ -22,6 +22,6 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ProjectionTools.sln
       - name: Build
-        run: dotnet build -c Release --no-restore ProjectionTools.sln
+        run: dotnet build --no-restore ProjectionTools.sln
       - name: Test
         run: dotnet test --no-build --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
