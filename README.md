@@ -15,7 +15,7 @@ Install using Package-Manager console:
 PM> Install-Package ProjectionTools
 ```
 
-I've also published article on [Alternative specification pattern implementation in C#](https://medium.com/@nimrod97/alternative-specification-pattern-implementation-in-c-f5d88a7ed364).
+I've also published an article on Medium [Alternative specification pattern implementation in C#](https://medium.com/@nimrod97/alternative-specification-pattern-implementation-in-c-f5d88a7ed364).
 
 ## Projections
 
