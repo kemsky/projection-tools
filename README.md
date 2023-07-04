@@ -15,6 +15,147 @@ Install using Package-Manager console:
 PM> Install-Package ProjectionTools
 ```
 
+## Specifications
+
+Projections work but we have a problem: we do not reuse `Where(x => x.Active)` checks. There is one predicate in `UserController.GetUser` method and another in `UserDtoProjection`.
+
+This predicates can be more complex, often a combination of different predicates depending on business logic.
+
+There is a well-known specification pattern and there are many existing .NET implementations but they all share similar problems:
+
+- Verbose syntax for declaration and usage;
+- Many intrusive extensions methods that pollute project code;
+- Can only be used in certain contexts;
+
+`Specification<TSource>` can solve these problems.
+
+You can create specification using expression:
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active
+    );
+```
+or delegate:
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        default,
+        x => x.Active
+    );
+```
+or both (e.g. when DB has case-insensitive collation, delegate should match DB behavior):
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active,
+        x => x.Active
+    );
+```
+
+You can also combine specifications (using `&&`, `||`,`!`):
+```csharp
+    Specification<DepartmentEntity> CustomerServiceDepartment = new (
+        x => x.Name == "Customer Service"
+    );
+    
+    Specification<DepartmentEntity> ActiveCustomerServiceDepartment =  ActiveDepartment && CustomerServiceDepartment;
+```
+
+Full example:
+
+```csharp
+public class UserEntity
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; }
+
+    public bool Active { get; set; }
+
+    public List<DepartmentEntity> Departments { get; set; }
+}
+
+public class DepartmentEntity
+{
+    public int Id { get; set; }
+
+    public bool Active { get; set; }
+
+    public string Name { get; set; }
+}
+
+public class UserDto
+{
+    public string Name { get; set; }
+
+    public List<DepartmentDto> Departments { get; set; }
+}
+
+public class DepartmentDto
+{
+    public string Name { get; set; }
+}
+
+public static class UserProjections
+{
+    public static readonly Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active
+    );
+    
+    public static readonly Specification<UserEntity> ActiveUser = new (
+        x => x.Active
+    );
+
+    public static readonly Projection<DepartmentEntity, DepartmentDto> DepartmentDtoProjection = new (
+        x => new DepartmentDto
+        {
+            Name = x.Name
+        }
+    );
+
+    public static readonly Projection<UserEntity, UserDto> UserDtoProjection = new (
+        x => new UserDto
+        {
+            Name = x.Name,
+            Departments = x.Departments
+                                .Where(ActiveDepartment)
+                                .Select(DepartmentDtoProjection.Project)
+                                .ToList()
+        }
+    );
+}
+
+public class UserController : Controller 
+{
+    private readonly DbContext _context;
+
+    public UserController(DbContext context)
+    {
+        _context = context;
+    }
+
+    // option 1: Db projection
+    public Task<UserDto> GetUser(int id)
+    {
+        return context.Set<UserEntity>()
+                .Where(ActiveUser)
+                .Where(x => x.Id == id)
+                .Select(UserProjections.UserProjection.ProjectExpression)
+                .SingleAsync();
+    }
+
+    // option 2: in-memory projection
+    public async Task<UserDto> GetUser(int id)
+    {
+        var user = await context.Set<UserEntity>()
+                     .Include(x => x.Departments)
+                     .Where(ActiveUser)
+                     .Where(x => x.Id == id)
+                     .SingleAsync();
+
+        return UserProjections.UserProjection.Project(user);
+    }
+}
+```
+
 ## Projections
 
 My initial goal was to replace packages like AutoMapper and similar.
@@ -162,147 +303,6 @@ public class UserController : Controller
         var user = await context.Set<UserEntity>()
                      .Include(x => x.Departments)
                      .Where(x => x.Active)
-                     .Where(x => x.Id == id)
-                     .SingleAsync();
-
-        return UserProjections.UserProjection.Project(user);
-    }
-}
-```
-
-## Specifications (reusable predicates)
-
-Projections work but we have a problem: we do not reuse `Where(x => x.Active)` checks. There is one predicate in `UserController.GetUser` method and another in `UserDtoProjection`.
-
-This predicates can be more complex, often a combination of different predicates depending on business logic.
-
-There is a well-known specification pattern and there are many existing .NET implementations but they all share similar problems:
-
-- Verbose syntax for declaration and usage;
-- Many intrusive extensions methods that pollute project code;
-- Can only be used in certain contexts;
-
-`Specification<TSource>` can solve these problems.
-
-You can create specification using expression:
-```csharp
-    Specification<DepartmentEntity> ActiveDepartment = new (
-        x => x.Active
-    );
-```
-or delegate:
-```csharp
-    Specification<DepartmentEntity> ActiveDepartment = new (
-        default,
-        x => x.Active
-    );
-```
-or both (e.g. when DB has case-insensitive collation, delegate should match DB behavior):
-```csharp
-    Specification<DepartmentEntity> ActiveDepartment = new (
-        x => x.Active,
-        x => x.Active
-    );
-```
-
-You can also combine specifications (using `&&`, `||`,`!`):
-```csharp
-    Specification<DepartmentEntity> CustomerServiceDepartment = new (
-        x => x.Name == "Customer Service"
-    );
-    
-    Specification<DepartmentEntity> ActiveCustomerServiceDepartment =  ActiveDepartment && CustomerServiceDepartment;
-```
-
-Full example:
-
-```csharp
-public class UserEntity
-{
-    public int Id { get; set; }
-
-    public string Name { get; set; }
-
-    public bool Active { get; set; }
-
-    public List<DepartmentEntity> Departments { get; set; }
-}
-
-public class DepartmentEntity
-{
-    public int Id { get; set; }
-
-    public bool Active { get; set; }
-
-    public string Name { get; set; }
-}
-
-public class UserDto
-{
-    public string Name { get; set; }
-
-    public List<DepartmentDto> Departments { get; set; }
-}
-
-public class DepartmentDto
-{
-    public string Name { get; set; }
-}
-
-public static class UserProjections
-{
-    public static readonly Specification<DepartmentEntity> ActiveDepartment = new (
-        x => x.Active
-    );
-    
-    public static readonly Specification<UserEntity> ActiveUser = new (
-        x => x.Active
-    );
-
-    public static readonly Projection<DepartmentEntity, DepartmentDto> DepartmentDtoProjection = new (
-        x => new DepartmentDto
-        {
-            Name = x.Name
-        }
-    );
-
-    public static readonly Projection<UserEntity, UserDto> UserDtoProjection = new (
-        x => new UserDto
-        {
-            Name = x.Name,
-            Departments = x.Departments
-                                .Where(ActiveDepartment)
-                                .Select(DepartmentDtoProjection.Project)
-                                .ToList()
-        }
-    );
-}
-
-public class UserController : Controller 
-{
-    private readonly DbContext _context;
-
-    public UserController(DbContext context)
-    {
-        _context = context;
-    }
-
-    // option 1: Db projection
-    public Task<UserDto> GetUser(int id)
-    {
-        return context.Set<UserEntity>()
-                .Where(ActiveUser)
-                .Where(x => x.Id == id)
-                .Select(UserProjections.UserProjection.ProjectExpression)
-                .SingleAsync();
-    }
-
-    // option 2: in-memory projection
-    public async Task<UserDto> GetUser(int id)
-    {
-        var user = await context.Set<UserEntity>()
-                     .Include(x => x.Departments)
-                     .Where(ActiveUser)
                      .Where(x => x.Id == id)
                      .SingleAsync();
 
