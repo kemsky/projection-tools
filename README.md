@@ -15,6 +15,8 @@ Install using Package-Manager console:
 PM> Install-Package ProjectionTools
 ```
 
+I've also published article on [Specification pattern implementation in C#](https://medium.com/@nimrod97/alternative-specification-pattern-implementation-in-c-f5d88a7ed364).
+
 ## Projections
 
 My initial goal was to replace packages like AutoMapper and similar.
