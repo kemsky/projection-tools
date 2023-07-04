@@ -42,7 +42,7 @@
     <PackageVersion>1.0.13</PackageVersion>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <!--  https://github.com/dotnet/roslyn/issues/55860  -->
     <SourceRoot Include="$(SolutionDir)" />
   </ItemGroup>
