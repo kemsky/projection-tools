@@ -89,14 +89,35 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(binaryExpression.Method.Name, "op_BitwiseOr", StringComparison.Ordinal)
         )
         {
-            var arg1 = (LambdaExpression)Visit(binaryExpression.Left)!;
-            var arg2 = (LambdaExpression)Visit(binaryExpression.Right)!;
+            var left = Visit(binaryExpression.Left)!;
+            var right = Visit(binaryExpression.Right)!;
 
-            var replaceParameterVisitor = new ReplaceParameterVisitor(arg2.Parameters[0], arg1.Parameters[0]);
+            LambdaExpression leftLambda;
+            LambdaExpression rightLambda;
 
-            var body = replaceParameterVisitor.Visit(arg2.Body)!;
+            if (left.TryEvaluate(out var evaluated1))
+            {
+                leftLambda = (LambdaExpression)evaluated1;
+            }
+            else
+            {
+                leftLambda = (LambdaExpression)left;
+            }
 
-            return Visit(Expression.Lambda(Expression.Or(arg1.Body, body), arg1.Parameters))!;
+            if (right.TryEvaluate(out var evaluated2))
+            {
+                rightLambda = (LambdaExpression)evaluated2;
+            }
+            else
+            {
+                rightLambda = (LambdaExpression)right;
+            }
+
+            var replaceParameterVisitor = new ReplaceParameterVisitor(rightLambda.Parameters[0], leftLambda.Parameters[0]);
+
+            var body = replaceParameterVisitor.Visit(rightLambda.Body)!;
+
+            return Visit(Expression.Lambda(Expression.Or(leftLambda.Body, body), leftLambda.Parameters))!;
         }
 
         // replace And
@@ -107,14 +128,35 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && string.Equals(binaryExpression.Method.Name, "op_BitwiseAnd", StringComparison.Ordinal)
         )
         {
-            var arg1 = (LambdaExpression)Visit(binaryExpression.Left)!;
-            var arg2 = (LambdaExpression)Visit(binaryExpression.Right)!;
+            var left = Visit(binaryExpression.Left)!;
+            var right = Visit(binaryExpression.Right)!;
 
-            var replaceParameterVisitor = new ReplaceParameterVisitor(arg2.Parameters[0], arg1.Parameters[0]);
+            LambdaExpression leftLambda;
+            LambdaExpression rightLambda;
 
-            var body = replaceParameterVisitor.Visit(arg2.Body)!;
+            if (left.TryEvaluate(out var evaluated1))
+            {
+                leftLambda = (LambdaExpression)evaluated1;
+            }
+            else
+            {
+                leftLambda = (LambdaExpression)left;
+            }
 
-            return Visit(Expression.Lambda(Expression.And(arg1.Body, body), arg1.Parameters))!;
+            if (right.TryEvaluate(out var evaluated2))
+            {
+                rightLambda = (LambdaExpression)evaluated2;
+            }
+            else
+            {
+                rightLambda = (LambdaExpression)right;
+            }
+
+            var replaceParameterVisitor = new ReplaceParameterVisitor(rightLambda.Parameters[0], leftLambda.Parameters[0]);
+
+            var body = replaceParameterVisitor.Visit(rightLambda.Body)!;
+
+            return Visit(Expression.Lambda(Expression.And(leftLambda.Body, body), leftLambda.Parameters))!;
         }
 
         return base.VisitBinary(binaryExpression);

@@ -135,6 +135,16 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
         return f.IsSatisfiedByExpression;
     }
 
+    // public static implicit operator Specification<TSource>(Expression<Func<TSource, bool>> f)
+    // {
+    //     return new Specification<TSource>(f);
+    // }
+    //
+    // public static implicit operator Specification<TSource>(Func<TSource, bool> f)
+    // {
+    //     return new Specification<TSource>(default, f);
+    // }
+
     LambdaExpression ISpecificationExpressionAccessor.GetExpression()
     {
         return IsSatisfiedByExpression;
