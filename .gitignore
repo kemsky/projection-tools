@@ -4,5 +4,7 @@ obj
 
 *.nupkg
 *.snupkg
+coverage.opencover.xml
+html-coverage-report
 
 ProjectionTools.sln.DotSettings.user

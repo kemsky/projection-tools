@@ -4,17 +4,34 @@
     <TargetFramework>net7.0</TargetFramework>
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>true</ImplicitUsings>
+    <CoverletOutputFormat>opencover</CoverletOutputFormat>
+    <Threshold>90</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ExcludeByFile>**/ProjectionTools/NullableAttributes.cs,**/ProjectionTools/InternalsVisible.cs,**/ProjectionTools/Assertions/*.cs</ExcludeByFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AgileObjects.ReadableExpressions" Version="4.0.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="ReportGenerator" Version="5.1.23" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ProjectionTools\ProjectionTools.csproj" />
   </ItemGroup>
 
+  <!-- does not work with dotnet 7.0.100 use higher versions  -->
+  <Target Name="GenerateHtmlCoverageReport" AfterTargets="GenerateCoverageResultAfterTest">
+    <ReportGenerator ReportFiles="@(CoverletReport)" TargetDirectory="html-coverage-report" />
+  </Target>
 </Project>
