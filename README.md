@@ -34,7 +34,7 @@ The common drawbacks of using mappers:
 In the most cases mapping splits into two independent scenarios:
 
 1. Fetch DTOs from DB using automatic projections;
-2. DTOs to entities and then save modified entities to DB;
+2. Map DTOs to entities and then save modified entities to DB;
 
 In reality direct mapping from DTO to entity is rarely viable: there are validations, access rights, business logic. It means that you end up writing custom code for each save operation. 
 
