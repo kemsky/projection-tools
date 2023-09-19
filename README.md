@@ -17,6 +17,144 @@ PM> Install-Package ProjectionTools
 
 I've also published an article on Medium [Alternative specification pattern implementation in C#](https://medium.com/@nimrod97/alternative-specification-pattern-implementation-in-c-f5d88a7ed364).
 
+## Specifications
+
+Predicates can be complex, often a combination of different predicates depending on business logic.
+
+There is a well-known specification pattern and there are many existing .NET implementations but they all share similar problems:
+
+- Verbose syntax for declaration and usage;
+- Many intrusive extensions methods that pollute project code;
+- Can only be used in certain contexts;
+
+`Specification<TSource>` can solve all of these problems.
+
+You can create specification using an expression:
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active
+    );
+```
+or a delegate:
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        default,
+        x => x.Active
+    );
+```
+or both (e.g. when you have to use EF specific DbFunctions):
+```csharp
+    Specification<DepartmentEntity> ActiveDepartment = new (
+        x => x.Active,
+        x => x.Active
+    );
+```
+
+You can also easily combine specifications (using `&&`, `||`,`!` operators):
+```csharp
+    Specification<DepartmentEntity> CustomerServiceDepartment = new (
+        x => x.Name == "Customer Service"
+    );
+    
+    Specification<DepartmentEntity> ActiveCustomerServiceDepartment =  ActiveDepartment && CustomerServiceDepartment;
+```
+
+Specifications can be nested:
+```csharp
+    Specification<DepartmentEntity> CustomerServiceDepartment = new (
+        x => x.Name == "Customer Service"
+    );
+    
+    Specification<UserEntity> ActiveUserInCustomerServiceDepartment = new (
+        x => x.Active && x.Departments.Any(CustomerServiceDepartment.IsSatisfiedBy)
+    );
+```
+
+Full example:
+
+```csharp
+public class UserEntity
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; }
+
+    public bool Active { get; set; }
+
+    public bool IsAdmin { get; set; }
+
+    public List<DepartmentEntity> Departments { get; set; }
+}
+
+public class DepartmentEntity
+{
+    public int Id { get; set; }
+
+    public bool Active { get; set; }
+
+    public string Name { get; set; }
+}
+
+public class UserDto
+{
+    public string Name { get; set; }
+
+    public List<DepartmentDto> Departments { get; set; }
+}
+
+public class DepartmentDto
+{
+    public string Name { get; set; }
+}
+
+public static class UserSpec
+{
+    public static readonly Specification<DepartmentEntity> ActiveDepartment = new(
+        x => x.Active
+    );
+
+    public static readonly Specification<UserEntity> ActiveUser = new(
+        x => x.Active
+    );
+
+    public static readonly Specification<UserEntity> AdminUser = new(
+        x => x.IsAdmin
+    );
+
+    public static readonly Specification<UserEntity> ActiveAdminUser = ActiveUser && AdminUser;
+
+    public static readonly Specification<UserEntity> ActiveUserInActiveDepartment = new(
+        x => x.Active && x.Departments.Any(ActiveDepartment)
+    );
+}
+
+public class UserController : Controller
+{
+    private readonly DbContext _context;
+
+    public UserController(DbContext context)
+    {
+        _context = context;
+    }
+
+    public Task<UserEntity> GetUser(int id)
+    {
+        return context.Set<UserEntity>()
+            .Where(ActiveUserInActiveDepartment)
+            .Where(x => x.Id == id)
+            .SingleAsync();
+    }
+
+    public Task<UserEntity> GetAdminUser(int id)
+    {
+        return context.Set<UserEntity>()
+            .Where(ActiveAdminUser)
+            .Where(x => x.Id == id)
+            .SingleAsync();
+    }
+}
+```
+
 ## Projections
 
 My initial goal was to replace packages like AutoMapper and similar.
@@ -31,16 +169,16 @@ The common drawbacks of using mappers:
 - Poor testing experience, sometimes you have to create your own "tools" specifically for testing mappings;
 - Compatibility with LINQ providers, recently AutoMapper has broken compatibility with EF6 for no reason at all;
 
-In the most cases mapping splits into two independent scenarios:
+In most cases mapping splits into two independent scenarios:
 
 1. Fetch DTOs from DB using automatic projections;
 2. Map DTOs to entities and then save modified entities to DB;
 
-In reality direct mapping from DTO to entity is rarely viable: there are validations, access rights, business logic. It means that you end up writing custom code for each save operation. 
+In reality direct mapping from DTO to entity is rarely viable: there are validations, access rights, business logic. It means that you end up writing custom code for each save operation.
 
 In case we want to support only 1st scenario there is no need to deal with complex mapper configurations.
 
-`Projection<TSource, TResult>` - provides an option to define reusable mappings.
+`Projection<TSource, TResult>` - provides an option to define reusable mapping.
 
 You can create projection using mapping expression:
 
@@ -164,147 +302,6 @@ public class UserController : Controller
         var user = await context.Set<UserEntity>()
                      .Include(x => x.Departments)
                      .Where(x => x.Active)
-                     .Where(x => x.Id == id)
-                     .SingleAsync();
-
-        return UserProjections.UserProjection.Project(user);
-    }
-}
-```
-
-## Specifications
-
-Projections work but we have a problem: we do not reuse `Where(x => x.Active)` checks. There is one predicate in `UserController.GetUser` method and another in `UserDtoProjection`.
-
-This predicates can be more complex, often a combination of different predicates depending on business logic.
-
-There is a well-known specification pattern and there are many existing .NET implementations but they all share similar problems:
-
-- Verbose syntax for declaration and usage;
-- Many intrusive extensions methods that pollute project code;
-- Can only be used in certain contexts;
-
-`Specification<TSource>` can solve these problems.
-
-You can create specification using expression:
-```csharp
-    Specification<DepartmentEntity> ActiveDepartment = new (
-        x => x.Active
-    );
-```
-or delegate:
-```csharp
-    Specification<DepartmentEntity> ActiveDepartment = new (
-        default,
-        x => x.Active
-    );
-```
-or both (e.g. when DB has case-insensitive collation, delegate should match DB behavior):
-```csharp
-    Specification<DepartmentEntity> ActiveDepartment = new (
-        x => x.Active,
-        x => x.Active
-    );
-```
-
-You can also combine specifications (using `&&`, `||`,`!`):
-```csharp
-    Specification<DepartmentEntity> CustomerServiceDepartment = new (
-        x => x.Name == "Customer Service"
-    );
-    
-    Specification<DepartmentEntity> ActiveCustomerServiceDepartment =  ActiveDepartment && CustomerServiceDepartment;
-```
-
-Full example:
-
-```csharp
-public class UserEntity
-{
-    public int Id { get; set; }
-
-    public string Name { get; set; }
-
-    public bool Active { get; set; }
-
-    public List<DepartmentEntity> Departments { get; set; }
-}
-
-public class DepartmentEntity
-{
-    public int Id { get; set; }
-
-    public bool Active { get; set; }
-
-    public string Name { get; set; }
-}
-
-public class UserDto
-{
-    public string Name { get; set; }
-
-    public List<DepartmentDto> Departments { get; set; }
-}
-
-public class DepartmentDto
-{
-    public string Name { get; set; }
-}
-
-public static class UserProjections
-{
-    public static readonly Specification<DepartmentEntity> ActiveDepartment = new (
-        x => x.Active
-    );
-    
-    public static readonly Specification<UserEntity> ActiveUser = new (
-        x => x.Active
-    );
-
-    public static readonly Projection<DepartmentEntity, DepartmentDto> DepartmentDtoProjection = new (
-        x => new DepartmentDto
-        {
-            Name = x.Name
-        }
-    );
-
-    public static readonly Projection<UserEntity, UserDto> UserDtoProjection = new (
-        x => new UserDto
-        {
-            Name = x.Name,
-            Departments = x.Departments
-                                .Where(ActiveDepartment)
-                                .Select(DepartmentDtoProjection.Project)
-                                .ToList()
-        }
-    );
-}
-
-public class UserController : Controller 
-{
-    private readonly DbContext _context;
-
-    public UserController(DbContext context)
-    {
-        _context = context;
-    }
-
-    // option 1: Db projection
-    public Task<UserDto> GetUser(int id)
-    {
-        return context.Set<UserEntity>()
-                .Where(ActiveUser)
-                .Where(x => x.Id == id)
-                .Select(UserProjections.UserProjection.ProjectExpression)
-                .SingleAsync();
-    }
-
-    // option 2: in-memory projection
-    public async Task<UserDto> GetUser(int id)
-    {
-        var user = await context.Set<UserEntity>()
-                     .Include(x => x.Departments)
-                     .Where(ActiveUser)
                      .Where(x => x.Id == id)
                      .SingleAsync();
 
