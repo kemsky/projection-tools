@@ -25,7 +25,7 @@ There is a well-known specification pattern and there are many existing .NET imp
 
 - Verbose syntax for declaration and usage;
 - Many intrusive extensions methods that pollute project code;
-- Can only be used in certain contexts;
+- Can only be used in certain contexts (delegates vs expressions);
 
 `Specification<TSource>` can solve all of these problems.
 
