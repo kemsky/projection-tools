@@ -30,8 +30,10 @@
     <ProjectReference Include="..\ProjectionTools\ProjectionTools.csproj" />
   </ItemGroup>
 
-  <!-- does not work with dotnet 7.0.100 use higher versions  -->
   <Target Name="GenerateHtmlCoverageReport" AfterTargets="GenerateCoverageResultAfterTest">
-    <ReportGenerator ReportFiles="@(CoverletReport)" TargetDirectory="html-coverage-report" />
+    <ItemGroup>
+      <CoverageFiles Include="coverage.opencover.xml" />
+    </ItemGroup>
+    <ReportGenerator ReportFiles="@(CoverageFiles)" TargetDirectory="html-coverage-report" />
   </Target>
 </Project>
