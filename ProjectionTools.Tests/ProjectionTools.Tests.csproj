@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>true</ImplicitUsings>
     <CoverletOutputFormat>opencover</CoverletOutputFormat>
@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AgileObjects.ReadableExpressions" Version="4.0.0" />
+    <PackageReference Include="AgileObjects.ReadableExpressions" Version="4.1.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -20,10 +20,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
+    <PackageReference Include="NUnit" Version="4.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="ReportGenerator" Version="5.1.23" />
+    <PackageReference Include="ReportGenerator" Version="5.2.1" />
   </ItemGroup>
 
   <ItemGroup>

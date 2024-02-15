@@ -39,7 +39,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedAllSources>true</EmbedAllSources>
     <IsPackable>true</IsPackable>
-    <PackageVersion>1.0.13</PackageVersion>
+    <PackageVersion>1.0.14</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
@@ -57,11 +57,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Roslynator.Analyzers" Version="4.3.0">
+    <PackageReference Include="Roslynator.Analyzers" Version="4.10.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
