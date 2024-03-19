@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 
 namespace ProjectionTools.Projections;
 
-internal interface IProjectionExpressionAccessor
+public interface IProjectionExpressionAccessor
 {
     LambdaExpression GetExpression();
 }
