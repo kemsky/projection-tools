@@ -24,7 +24,7 @@
     <Author>Alexander Turtsevich</Author>
     <Authors>Alexander Turtsevich</Authors>
     <Description>Primitives for building reusable LINQ projections and specifications/predicates</Description>
-    <Copyright>Copyright © Alexander Turtsevich 2023</Copyright>
+    <Copyright>Copyright © Alexander Turtsevich 2024</Copyright>
     <PackageIcon>logo.png</PackageIcon>
     <PackageProjectUrl>https://github.com/kemsky/projection-tools</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kemsky/projection-tools</RepositoryUrl>
@@ -39,7 +39,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <EmbedAllSources>true</EmbedAllSources>
     <IsPackable>true</IsPackable>
-    <PackageVersion>1.0.14</PackageVersion>
+    <PackageVersion>1.0.15</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
