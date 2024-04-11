@@ -18,9 +18,9 @@ internal sealed class ReplaceParameterVisitor : ExpressionVisitor
     {
         if (parameterExpression == _parameter)
         {
-            return _replacement;
+            return Visit(_replacement);
         }
 
-        return Visit(parameterExpression)!;
+        return base.VisitParameter(parameterExpression)!;
     }
 }
