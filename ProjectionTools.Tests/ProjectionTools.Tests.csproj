@@ -4,6 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <CoverletOutputFormat>opencover</CoverletOutputFormat>
     <Threshold>90</Threshold>
     <ThresholdType>line</ThresholdType>
