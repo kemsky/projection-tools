@@ -10,14 +10,14 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
         // replace IsSatisfiedBy invocation with spec expression body
         if (
             invocationExpression.Expression is MemberExpression memberExpression
+            && memberExpression.Expression != null
             && memberExpression.Member.DeclaringType?.IsGenericType == true
             && memberExpression.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
             && string.Equals(memberExpression.Member.Name, nameof(Specification<object>.IsSatisfiedBy), StringComparison.Ordinal)
             && memberExpression.Expression.TryEvaluate(out var specificationValue)
+            && specificationValue is ISpecificationExpressionAccessor specification
         )
         {
-            var specification = (ISpecificationExpressionAccessor)specificationValue;
-
             var lambda = specification.GetExpression();
 
             var replaceParameterVisitor = new ReplaceParameterVisitor(lambda.Parameters[0], invocationExpression.Arguments[0]);
@@ -64,7 +64,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             && constantExpression.TryEvaluate(out var memberValue)
         )
         {
-            var specification = (ISpecificationExpressionAccessor)memberValue;
+            var specification = memberValue as ISpecificationExpressionAccessor;
 
             if (specification == null)
             {
@@ -95,7 +95,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             LambdaExpression leftLambda;
             LambdaExpression rightLambda;
 
-            if (left.TryEvaluate(out var evaluated1))
+            if (left.TryEvaluate(out var evaluated1) && evaluated1 is LambdaExpression)
             {
                 leftLambda = (LambdaExpression)evaluated1;
             }
@@ -104,7 +104,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
                 leftLambda = (LambdaExpression)left;
             }
 
-            if (right.TryEvaluate(out var evaluated2))
+            if (right.TryEvaluate(out var evaluated2) && evaluated2 is LambdaExpression)
             {
                 rightLambda = (LambdaExpression)evaluated2;
             }
@@ -134,7 +134,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
             LambdaExpression leftLambda;
             LambdaExpression rightLambda;
 
-            if (left.TryEvaluate(out var evaluated1))
+            if (left.TryEvaluate(out var evaluated1) && evaluated1 is LambdaExpression)
             {
                 leftLambda = (LambdaExpression)evaluated1;
             }
@@ -143,7 +143,7 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
                 leftLambda = (LambdaExpression)left;
             }
 
-            if (right.TryEvaluate(out var evaluated2))
+            if (right.TryEvaluate(out var evaluated2) && evaluated2 is LambdaExpression)
             {
                 rightLambda = (LambdaExpression)evaluated2;
             }

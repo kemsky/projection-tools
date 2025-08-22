@@ -17,7 +17,7 @@ public sealed class ProjectionFactory<TSource, TResult, TParam>
 
     public ProjectionFactory(Func<TParam, Expression<Func<TSource, TResult>>> expressionFactory)
     {
-        Defensive.Contract.ArgumentNotNull(expressionFactory, nameof(expressionFactory));
+        Defensive.Contract.ArgumentNotNull(expressionFactory);
 
         _lazyExpression = new Lazy<Func<TParam, Expression<Func<TSource, TResult>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
@@ -29,7 +29,7 @@ public sealed class ProjectionFactory<TSource, TResult, TParam>
         Func<TParam, Func<TSource, TResult>> delegateFactory
     )
     {
-        Defensive.Contract.ArgumentNotNull(delegateFactory, nameof(delegateFactory));
+        Defensive.Contract.ArgumentNotNull(delegateFactory);
 
         _lazyExpression = expressionFactory == null
             ? new Lazy<Func<TParam, Expression<Func<TSource, TResult>>>>(() => x => (Expression<Func<TSource, TResult>>)delegateFactory(x).Decompile(), LazyThreadSafetyMode.PublicationOnly)
@@ -43,8 +43,8 @@ public sealed class ProjectionFactory<TSource, TResult, TParam>
         Lazy<Func<TParam, Func<TSource, TResult>>> delegateFactory
     )
     {
-        Defensive.Contract.ArgumentNotNull(expressionFactory, nameof(expressionFactory));
-        Defensive.Contract.ArgumentNotNull(delegateFactory, nameof(delegateFactory));
+        Defensive.Contract.ArgumentNotNull(expressionFactory);
+        Defensive.Contract.ArgumentNotNull(delegateFactory);
 
         _lazyExpression = expressionFactory;
         _lazyDelegate = delegateFactory;

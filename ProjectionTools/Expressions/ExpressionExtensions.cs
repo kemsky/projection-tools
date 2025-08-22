@@ -7,7 +7,7 @@ namespace ProjectionTools.Expressions;
 
 internal static class ExpressionExtensions
 {
-    public static bool TryEvaluate(this Expression expression, [MaybeNullWhen(false)] out object result)
+    public static bool TryEvaluate(this Expression expression, [MaybeNullWhen(false)] out object? result)
     {
         if (expression is MemberExpression memberExpression)
         {

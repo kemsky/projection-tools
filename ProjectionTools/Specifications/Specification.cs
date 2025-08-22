@@ -17,7 +17,7 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public Specification(Expression<Func<TSource, bool>> expressionFunc)
     {
-        Defensive.Contract.ArgumentNotNull(expressionFunc, nameof(expressionFunc));
+        Defensive.Contract.ArgumentNotNull(expressionFunc);
 
         _lazyExpression = new Lazy<Expression<Func<TSource, bool>>>(() => expressionFunc.Rewrite(), LazyThreadSafetyMode.PublicationOnly);
 
@@ -31,7 +31,7 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public Specification(Expression<Func<TSource, bool>>? expressionFunc, Func<TSource, bool> delegateFunc)
     {
-        Defensive.Contract.ArgumentNotNull(delegateFunc, nameof(delegateFunc));
+        Defensive.Contract.ArgumentNotNull(delegateFunc);
 
         _lazyExpression = expressionFunc == null
             ? new Lazy<Expression<Func<TSource, bool>>>(() => ((Expression<Func<TSource, bool>>)delegateFunc.Decompile()).Rewrite(), LazyThreadSafetyMode.PublicationOnly)
@@ -42,8 +42,8 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     internal Specification(Lazy<Expression<Func<TSource, bool>>> lazyExpression, Lazy<Func<TSource, bool>> lazyDelegate)
     {
-        Defensive.Contract.ArgumentNotNull(lazyExpression, nameof(lazyExpression));
-        Defensive.Contract.ArgumentNotNull(lazyDelegate, nameof(lazyDelegate));
+        Defensive.Contract.ArgumentNotNull(lazyExpression);
+        Defensive.Contract.ArgumentNotNull(lazyDelegate);
 
         _lazyExpression = lazyExpression;
 
@@ -52,8 +52,8 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public static Specification<TSource> operator &(Specification<TSource> spec1, Specification<TSource> spec2)
     {
-        Defensive.Contract.ArgumentNotNull(spec1, nameof(spec1));
-        Defensive.Contract.ArgumentNotNull(spec2, nameof(spec2));
+        Defensive.Contract.ArgumentNotNull(spec1);
+        Defensive.Contract.ArgumentNotNull(spec2);
 
         return new Specification<TSource>(
             new Lazy<Expression<Func<TSource, bool>>>(() => spec1.IsSatisfiedByExpression.And(spec2.IsSatisfiedByExpression), LazyThreadSafetyMode.PublicationOnly),
@@ -63,8 +63,8 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public static Specification<TSource> operator |(Specification<TSource> spec1, Specification<TSource> spec2)
     {
-        Defensive.Contract.ArgumentNotNull(spec1, nameof(spec1));
-        Defensive.Contract.ArgumentNotNull(spec2, nameof(spec2));
+        Defensive.Contract.ArgumentNotNull(spec1);
+        Defensive.Contract.ArgumentNotNull(spec2);
 
         return new Specification<TSource>(
             new Lazy<Expression<Func<TSource, bool>>>(() => spec1.IsSatisfiedByExpression.Or(spec2.IsSatisfiedByExpression), LazyThreadSafetyMode.PublicationOnly),
@@ -74,7 +74,7 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public static Specification<TSource> operator !(Specification<TSource> specification)
     {
-        Defensive.Contract.ArgumentNotNull(specification, nameof(specification));
+        Defensive.Contract.ArgumentNotNull(specification);
 
         return new Specification<TSource>(
             new Lazy<Expression<Func<TSource, bool>>>(() => specification.IsSatisfiedByExpression.Not(), LazyThreadSafetyMode.PublicationOnly),
@@ -90,7 +90,7 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public Specification<TProjection> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>> expression)
     {
-        Defensive.Contract.ArgumentNotNull(expression, nameof(expression));
+        Defensive.Contract.ArgumentNotNull(expression);
 
         var currentDelegate = IsSatisfiedBy;
         var currentExpression = IsSatisfiedByExpression;
@@ -108,7 +108,7 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 
     public Specification<TProjection> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>>? expressionFunc, Func<TProjection, TSource> delegateFunc)
     {
-        Defensive.Contract.ArgumentNotNull(delegateFunc, nameof(delegateFunc));
+        Defensive.Contract.ArgumentNotNull(delegateFunc);
 
         var currentDelegate = IsSatisfiedBy;
         var currentExpression = IsSatisfiedByExpression;

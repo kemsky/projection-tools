@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using ProjectionTools.Assertions;
 using ProjectionTools.Projections;
 
 namespace ProjectionTools.Expressions;
@@ -10,12 +11,15 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
         // replace Delegate call with projection expression body
         if (
             node.Expression is MemberExpression memberExpression
+            && memberExpression.Expression != null
             && memberExpression.Member.DeclaringType?.IsGenericType == true
             && memberExpression.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Projection<,>)
             && string.Equals(memberExpression.Member.Name, nameof(Projection<object, object>.Project), StringComparison.Ordinal)
             && memberExpression.Expression.TryEvaluate(out var projectionValue)
         )
         {
+            Defensive.Contract.NotNull(projectionValue);
+
             var projection = (IProjectionExpressionAccessor)projectionValue;
 
             var lambda = projection.GetExpression();
@@ -64,10 +68,9 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
             constantExpression.Type.IsGenericType
             && constantExpression.Type.GetGenericTypeDefinition() == typeof(Projection<,>)
             && constantExpression.TryEvaluate(out var projectionValue)
+            && projectionValue is IProjectionExpressionAccessor projection
         )
         {
-            var projection = (IProjectionExpressionAccessor)projectionValue;
-
             var expression = projection.GetExpression();
 
             return Visit(expression)!;

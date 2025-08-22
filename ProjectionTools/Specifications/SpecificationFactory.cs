@@ -16,7 +16,7 @@ public sealed class SpecificationFactory<TSource, TParam>
 
     public SpecificationFactory(Func<TParam, Expression<Func<TSource, bool>>> expressionFactory)
     {
-        Defensive.Contract.ArgumentNotNull(expressionFactory, nameof(expressionFactory));
+        Defensive.Contract.ArgumentNotNull(expressionFactory);
 
         _lazyExpressionFactory = new Lazy<Func<TParam, Expression<Func<TSource, bool>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
@@ -25,7 +25,7 @@ public sealed class SpecificationFactory<TSource, TParam>
 
     public SpecificationFactory(Func<TParam, Expression<Func<TSource, bool>>>? expressionFactory, Func<TParam, Func<TSource, bool>> delegateFactory)
     {
-        Defensive.Contract.ArgumentNotNull(delegateFactory, nameof(delegateFactory));
+        Defensive.Contract.ArgumentNotNull(delegateFactory);
 
         _lazyExpressionFactory = expressionFactory == null
             ? new Lazy<Func<TParam, Expression<Func<TSource, bool>>>>(() => x => (Expression<Func<TSource, bool>>)delegateFactory(x).Decompile(), LazyThreadSafetyMode.None)
@@ -36,8 +36,8 @@ public sealed class SpecificationFactory<TSource, TParam>
 
     internal SpecificationFactory(Lazy<Func<TParam, Expression<Func<TSource, bool>>>> expressionFactory, Lazy<Func<TParam, Func<TSource, bool>>> delegateFactory)
     {
-        Defensive.Contract.ArgumentNotNull(expressionFactory, nameof(expressionFactory));
-        Defensive.Contract.ArgumentNotNull(delegateFactory, nameof(delegateFactory));
+        Defensive.Contract.ArgumentNotNull(expressionFactory);
+        Defensive.Contract.ArgumentNotNull(delegateFactory);
 
         _lazyExpressionFactory = expressionFactory;
 

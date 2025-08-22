@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace ProjectionTools.Assertions;
 
@@ -10,6 +11,7 @@ internal sealed class Defensive
     {
     }
 
+    [DoesNotReturn]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Throw(string message)
     {
