@@ -1,10 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 using DelegateDecompiler;
 using ProjectionTools.Assertions;
 using ProjectionTools.Expressions;
 
 namespace ProjectionTools.Projections;
 
+[DebuggerDisplay("{ProjectExpression}")]
 public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 {
     public Expression<Func<TSource, TResult>> ProjectExpression => _lazyExpression.Value;

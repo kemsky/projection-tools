@@ -12,25 +12,24 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
         if (
             node.Expression is MemberExpression memberExpression
             && memberExpression.Expression != null
-            && memberExpression.Member.DeclaringType?.IsGenericType == true
-            && memberExpression.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Projection<,>)
+            && memberExpression.Member.IsProjectionMember()
             && string.Equals(memberExpression.Member.Name, nameof(Projection<object, object>.Project), StringComparison.Ordinal)
-            && memberExpression.Expression.TryEvaluate(out var projectionValue)
+            && memberExpression.Expression.TryEvaluate(out var memberValue)
         )
         {
-            Defensive.Contract.NotNull(projectionValue);
+            Defensive.Contract.NotNull(memberValue);
 
-            var projection = (IProjectionExpressionAccessor)projectionValue;
+            var projection = (IProjectionExpressionAccessor)memberValue;
 
             var lambda = projection.GetExpression();
 
             var body = lambda.Body;
 
-            var rebindParameter = new ReplaceParameterVisitor(lambda.Parameters[0], node.Arguments[0]);
+            var visitor = new ReplaceParameterVisitor(lambda.Parameters[0], node.Arguments[0]);
 
-            var expression = rebindParameter.Visit(body);
+            var expression = visitor.Visit(body);
 
-            return Visit(expression)!;
+            return Visit(expression);
         }
 
         return base.VisitInvocation(node);
@@ -40,22 +39,21 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
     {
         // replace Delegate property with projection expression
         if (
-            memberExpression.Member.DeclaringType?.IsGenericType == true
-            && memberExpression.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Projection<,>)
-            && string.Equals(memberExpression.Member.Name, nameof(Projection<object, object>.Project), StringComparison.Ordinal)
+            memberExpression.Expression != null
+            && memberExpression.Member.IsProjectionMember()
+            && memberExpression.Member.HasName(nameof(Projection<object, object>.Project))
         )
         {
-            return Visit(memberExpression.Expression)!;
+            return Visit(memberExpression.Expression);
         }
 
         // convert projection members to constants
         if (
-            memberExpression.Type.IsGenericType
-            && memberExpression.Type.GetGenericTypeDefinition() == typeof(Projection<,>)
+            memberExpression.Type.IsProjectionType()
             && memberExpression.TryEvaluate(out var memberValue)
         )
         {
-            return Visit(Expression.Constant(memberValue, memberExpression.Type))!;
+            return Visit(Expression.Constant(memberValue, memberExpression.Type));
         }
 
         return base.VisitMember(memberExpression);
@@ -65,15 +63,17 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
     {
         // evaluate constant spec members and replace with spec expression
         if (
-            constantExpression.Type.IsGenericType
-            && constantExpression.Type.GetGenericTypeDefinition() == typeof(Projection<,>)
-            && constantExpression.TryEvaluate(out var projectionValue)
-            && projectionValue is IProjectionExpressionAccessor projection
+            constantExpression.Type.IsProjectionType()
+            && constantExpression.TryEvaluate(out var constantValue)
         )
         {
+            Defensive.Contract.NotNull(constantValue);
+
+            var projection = (IProjectionExpressionAccessor)constantValue;
+
             var expression = projection.GetExpression();
 
-            return Visit(expression)!;
+            return Visit(expression);
         }
 
         return base.VisitConstant(constantExpression);
@@ -84,11 +84,10 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
         // replace implicit conversion with projection expression
         if (
             unaryExpression.NodeType == ExpressionType.Convert
-            && unaryExpression.Method?.DeclaringType?.IsGenericType == true
-            && unaryExpression.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Projection<,>)
+            && unaryExpression.Method.IsProjectionMember()
         )
         {
-            return Visit(unaryExpression.Operand)!;
+            return Visit(unaryExpression.Operand);
         }
 
         return base.VisitUnary(unaryExpression);

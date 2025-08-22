@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using ProjectionTools.Assertions;
+using ProjectionTools.Projections;
+using ProjectionTools.Specifications;
 
 namespace ProjectionTools.Expressions;
 
@@ -117,7 +119,7 @@ internal static class ExpressionExtensions
         Expression<Func<TParam, TSource>> parameterExpression
     )
     {
-        var body = new ReplaceParameterVisitor(expression.Parameters[0], parameterExpression.Body).Visit(expression.Body)!;
+        var body = new ReplaceParameterVisitor(expression.Parameters[0], parameterExpression.Body).Visit(expression.Body);
 
         return Expression.Lambda<Func<TParam, TReturn>>(body, parameterExpression.Parameters);
     }
@@ -127,7 +129,7 @@ internal static class ExpressionExtensions
         Expression<Func<TResult, TDestination>> projectionExpression
     )
     {
-        var body = new ReplaceParameterVisitor(projectionExpression.Parameters[0], expression.Body).Visit(projectionExpression.Body)!;
+        var body = new ReplaceParameterVisitor(projectionExpression.Parameters[0], expression.Body).Visit(projectionExpression.Body);
 
         return Expression.Lambda<Func<TSource, TDestination>>(body, expression.Parameters);
     }
@@ -140,7 +142,7 @@ internal static class ExpressionExtensions
     {
         var parameterBody = argumentExpression.Body;
 
-        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody).Visit(expression)!;
+        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody).Visit(expression);
     }
 
     public static TExpression BindArguments<TExpression, TArg1, TArg2>(
@@ -154,6 +156,35 @@ internal static class ExpressionExtensions
         var argument1Body = argument1Expression.Body;
         var argument2Body = argument2Expression.Body;
 
-        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo2, argument2Body).Visit(new ReplaceCapturedArgumentVisitor(parameterInfo1, argument1Body).Visit(expression))!;
+        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo2, argument2Body).Visit(new ReplaceCapturedArgumentVisitor(parameterInfo1, argument1Body).Visit(expression));
+    }
+
+    public static bool HasName([NotNullWhen(true)] this MemberInfo? methodInfo, string name)
+    {
+        return methodInfo != null && string.Equals(methodInfo?.Name, name, StringComparison.Ordinal);
+    }
+
+    public static bool IsSpecificationType([NotNullWhen(true)] this Type? type)
+    {
+        return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Specification<>);
+    }
+
+    public static bool IsSpecificationMember([NotNullWhen(true)] this MemberInfo? methodInfo)
+    {
+        var type = methodInfo?.DeclaringType;
+
+        return type.IsSpecificationType();
+    }
+
+    public static bool IsProjectionType([NotNullWhen(true)] this Type? type)
+    {
+        return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Projection<,>);
+    }
+
+    public static bool IsProjectionMember([NotNullWhen(true)] this MemberInfo? methodInfo)
+    {
+        var type = methodInfo?.DeclaringType;
+
+        return type.IsProjectionType();
     }
 }

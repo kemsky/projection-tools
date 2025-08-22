@@ -8,7 +8,7 @@
     <CoverletOutputFormat>opencover</CoverletOutputFormat>
     <Threshold>90</Threshold>
     <ThresholdType>line</ThresholdType>
-    <ExcludeByFile>**/ProjectionTools/NullableAttributes.cs,**/ProjectionTools/InternalsVisible.cs,**/ProjectionTools/Assertions/*.cs</ExcludeByFile>
+    <ExcludeByFile>**/ProjectionTools/Expressions/StackExtensions.cs,**/ProjectionTools/InternalsVisible.cs,**/ProjectionTools/Assertions/*.cs</ExcludeByFile>
   </PropertyGroup>
 
   <ItemGroup>

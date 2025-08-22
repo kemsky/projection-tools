@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 using DelegateDecompiler;
 using ProjectionTools.Assertions;
@@ -5,6 +6,7 @@ using ProjectionTools.Expressions;
 
 namespace ProjectionTools.Specifications;
 
+[DebuggerDisplay("{IsSatisfiedByExpression}")]
 public sealed class Specification<TSource> : ISpecificationExpressionAccessor
 {
     public Expression<Func<TSource, bool>> IsSatisfiedByExpression => _lazyExpression.Value;

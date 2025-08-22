@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using ProjectionTools.Assertions;
 using ProjectionTools.Specifications;
 
 namespace ProjectionTools.Expressions;
@@ -11,20 +12,22 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
         if (
             invocationExpression.Expression is MemberExpression memberExpression
             && memberExpression.Expression != null
-            && memberExpression.Member.DeclaringType?.IsGenericType == true
-            && memberExpression.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
-            && string.Equals(memberExpression.Member.Name, nameof(Specification<object>.IsSatisfiedBy), StringComparison.Ordinal)
-            && memberExpression.Expression.TryEvaluate(out var specificationValue)
-            && specificationValue is ISpecificationExpressionAccessor specification
+            && memberExpression.Member.IsSpecificationMember()
+            && memberExpression.Member.HasName(nameof(Specification<object>.IsSatisfiedBy))
+            && memberExpression.Expression.TryEvaluate(out var memberValue)
         )
         {
+            Defensive.Contract.NotNull(memberValue);
+
+            var specification = (ISpecificationExpressionAccessor)memberValue;
+
             var lambda = specification.GetExpression();
 
             var replaceParameterVisitor = new ReplaceParameterVisitor(lambda.Parameters[0], invocationExpression.Arguments[0]);
 
             var expression = replaceParameterVisitor.Visit(lambda.Body);
 
-            return Visit(expression)!;
+            return Visit(expression);
         }
 
         return base.VisitInvocation(invocationExpression);
@@ -34,22 +37,21 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
     {
         // replace IsSatisfiedBy property with spec
         if (
-            memberExpression.Member.DeclaringType?.IsGenericType == true
-            && memberExpression.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
-            && string.Equals(memberExpression.Member.Name, nameof(Specification<object>.IsSatisfiedBy), StringComparison.Ordinal)
+            memberExpression.Expression != null
+            && memberExpression.Member.IsSpecificationMember()
+            && memberExpression.Member.HasName(nameof(Specification<object>.IsSatisfiedBy))
         )
         {
-            return Visit(memberExpression.Expression)!;
+            return Visit(memberExpression.Expression);
         }
 
         // convert spec members to constants
         if (
-            memberExpression.Type.IsGenericType
-            && memberExpression.Type.GetGenericTypeDefinition() == typeof(Specification<>)
+            memberExpression.Type.IsSpecificationType()
             && memberExpression.TryEvaluate(out var memberValue)
         )
         {
-            return Visit(Expression.Constant(memberValue, memberExpression.Type))!;
+            return Visit(Expression.Constant(memberValue, memberExpression.Type));
         }
 
         return base.VisitMember(memberExpression);
@@ -59,21 +61,17 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
     {
         // evaluate constant spec members and replace with spec expression
         if (
-            constantExpression.Type.IsGenericType
-            && constantExpression.Type.GetGenericTypeDefinition() == typeof(Specification<>)
-            && constantExpression.TryEvaluate(out var memberValue)
+            constantExpression.Type.IsSpecificationType()
+            && constantExpression.TryEvaluate(out var constantValue)
         )
         {
-            var specification = memberValue as ISpecificationExpressionAccessor;
+            Defensive.Contract.NotNull(constantValue);
 
-            if (specification == null)
-            {
-                throw new InvalidOperationException("Specification can not be null");
-            }
+            var specification = (ISpecificationExpressionAccessor)constantValue;
 
             var expression = specification.GetExpression();
 
-            return Visit(expression)!;
+            return Visit(expression);
         }
 
         return base.VisitConstant(constantExpression);
@@ -84,13 +82,12 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
         // replace Or
         if (
             (binaryExpression.NodeType == ExpressionType.OrElse || binaryExpression.NodeType == ExpressionType.Or)
-            && binaryExpression.Method?.DeclaringType?.IsGenericType == true
-            && binaryExpression.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
-            && string.Equals(binaryExpression.Method.Name, "op_BitwiseOr", StringComparison.Ordinal)
+            && binaryExpression.Method.IsSpecificationMember()
+            && binaryExpression.Method.HasName("op_BitwiseOr")
         )
         {
-            var left = Visit(binaryExpression.Left)!;
-            var right = Visit(binaryExpression.Right)!;
+            var left = Visit(binaryExpression.Left);
+            var right = Visit(binaryExpression.Right);
 
             LambdaExpression leftLambda;
             LambdaExpression rightLambda;
@@ -115,21 +112,20 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
 
             var replaceParameterVisitor = new ReplaceParameterVisitor(rightLambda.Parameters[0], leftLambda.Parameters[0]);
 
-            var body = replaceParameterVisitor.Visit(rightLambda.Body)!;
+            var body = replaceParameterVisitor.Visit(rightLambda.Body);
 
-            return Visit(Expression.Lambda(Expression.Or(leftLambda.Body, body), leftLambda.Parameters))!;
+            return Visit(Expression.Lambda(Expression.Or(leftLambda.Body, body), leftLambda.Parameters));
         }
 
         // replace And
         if (
             (binaryExpression.NodeType == ExpressionType.AndAlso || binaryExpression.NodeType == ExpressionType.And)
-            && binaryExpression.Method?.DeclaringType?.IsGenericType == true
-            && binaryExpression.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
-            && string.Equals(binaryExpression.Method.Name, "op_BitwiseAnd", StringComparison.Ordinal)
+            && binaryExpression.Method.IsSpecificationMember()
+            && binaryExpression.Method.HasName("op_BitwiseAnd")
         )
         {
-            var left = Visit(binaryExpression.Left)!;
-            var right = Visit(binaryExpression.Right)!;
+            var left = Visit(binaryExpression.Left);
+            var right = Visit(binaryExpression.Right);
 
             LambdaExpression leftLambda;
             LambdaExpression rightLambda;
@@ -154,9 +150,9 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
 
             var replaceParameterVisitor = new ReplaceParameterVisitor(rightLambda.Parameters[0], leftLambda.Parameters[0]);
 
-            var body = replaceParameterVisitor.Visit(rightLambda.Body)!;
+            var body = replaceParameterVisitor.Visit(rightLambda.Body);
 
-            return Visit(Expression.Lambda(Expression.And(leftLambda.Body, body), leftLambda.Parameters))!;
+            return Visit(Expression.Lambda(Expression.And(leftLambda.Body, body), leftLambda.Parameters));
         }
 
         return base.VisitBinary(binaryExpression);
@@ -167,9 +163,8 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
         // drop implicit conversion
         if (
             unaryExpression.NodeType == ExpressionType.Convert
-            && unaryExpression.Method?.DeclaringType?.IsGenericType == true
-            && unaryExpression.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
-            && string.Equals(unaryExpression.Method.Name, "op_Implicit", StringComparison.Ordinal)
+            && unaryExpression.Method.IsSpecificationMember()
+            && unaryExpression.Method.HasName("op_Implicit")
         )
         {
             return Visit(unaryExpression.Operand)!;
@@ -178,14 +173,13 @@ internal sealed class SpecificationVisitor : ExpressionVisitor
         // replace Not operator
         if (
             unaryExpression.NodeType == ExpressionType.Not
-            && unaryExpression.Method?.DeclaringType?.IsGenericType == true
-            && unaryExpression.Method.DeclaringType.GetGenericTypeDefinition() == typeof(Specification<>)
-            && string.Equals(unaryExpression.Method.Name, "op_LogicalNot", StringComparison.Ordinal)
+            && unaryExpression.Method.IsSpecificationMember()
+            && unaryExpression.Method.HasName("op_LogicalNot")
         )
         {
-            var expression = (LambdaExpression)Visit(unaryExpression.Operand)!;
+            var expression = (LambdaExpression)Visit(unaryExpression.Operand);
 
-            return Visit(Expression.Lambda(Expression.Not(expression.Body), expression.Parameters))!;
+            return Visit(Expression.Lambda(Expression.Not(expression.Body), expression.Parameters));
         }
 
         return base.VisitUnary(unaryExpression);
