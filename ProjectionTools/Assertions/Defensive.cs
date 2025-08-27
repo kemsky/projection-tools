@@ -15,6 +15,6 @@ internal sealed class Defensive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Throw(string message)
     {
-        throw new AssertionException(message);
+        throw new InvalidOperationException(message);
     }
 }

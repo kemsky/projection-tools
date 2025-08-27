@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using AgileObjects.ReadableExpressions;
 using NUnit.Framework;
 using ProjectionTools.Specifications;
 
@@ -23,7 +24,7 @@ public class SpecificationTest
 
         var result = specification.IsSatisfiedByExpression;
 
-        Assert.That(result.ToString(), Is.EqualTo("x => (x == \"A\")"));
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => x == \"A\""));
     }
 
     [Test]
@@ -59,7 +60,7 @@ public class SpecificationTest
 
         Expression<Func<string, bool>> result = specification;
 
-        Assert.That(result.ToString(), Is.EqualTo("x => (x == \"A\")"));
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => x == \"A\""));
     }
 
     [Test]
@@ -106,7 +107,7 @@ public class SpecificationTest
 
         var result = specification1.IsSatisfiedByExpression;
 
-        Assert.That(result.ToString(), Is.EqualTo("x => (x.Name == \"A\")"));
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => x.Name == \"A\""));
     }
 
     [Test]
@@ -202,7 +203,7 @@ public class SpecificationTest
         var result = specification.IsSatisfiedBy("A");
 
         Assert.That(result, Is.True);
-        Assert.That(specification.IsSatisfiedByExpression.ToString(), Is.EqualTo("x => ((x == \"A\") AndAlso (x.Length == 1))"));
+        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo("x => (x == \"A\") && (x.Length == 1)"));
     }
 
     #endregion
@@ -210,11 +211,9 @@ public class SpecificationTest
     #region Operator !
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__Operator_Not__Expression__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__Operator_Not__Expression__ok(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -226,15 +225,13 @@ public class SpecificationTest
 
         var result = specification1.IsSatisfiedByExpression;
 
-        Assert.That(result.ToString(), Is.EqualTo("x => Not((x == \"A\"))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => !(x == \"A\")"));
     }
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__Operator_Not__Delegate__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__Operator_Not__Delegate__ok(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -254,11 +251,9 @@ public class SpecificationTest
     #region Operator &
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__Operator_And__Expression__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__Operator_And__Expression__ok(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -276,15 +271,13 @@ public class SpecificationTest
 
         var result = specification.IsSatisfiedByExpression;
 
-        Assert.That(result.ToString(), Is.EqualTo("x => ((x == \"A\") AndAlso (x == \"B\"))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => (x == \"A\") && (x == \"B\")"));
     }
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__Operator_And__Delegate__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__Operator_And__Delegate__ok(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -310,11 +303,9 @@ public class SpecificationTest
     #region Operator |
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__Operator_Or__Expression__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__Operator_Or__Expression__ok(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -332,15 +323,13 @@ public class SpecificationTest
 
         var result = specification.IsSatisfiedByExpression;
 
-        Assert.That(result.ToString(), Is.EqualTo("x => ((x == \"A\") OrElse (x == \"B\"))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => (x == \"A\") || (x == \"B\")"));
     }
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__Operator_Or__Delegate__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__Operator_Or__Delegate__ok(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -364,11 +353,9 @@ public class SpecificationTest
     #endregion
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Specification__nested__ok(bool createFromExpression, bool applyToExpression)
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__nested__ok(bool createFromExpression)
     {
         var specification1 = Create<ProjectedClass>(
             createFromExpression,
@@ -385,6 +372,80 @@ public class SpecificationTest
         var result = specification.IsSatisfiedBy(new ProjectedClass("A"));
 
         Assert.That(result, Is.True);
+        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo("x => (x.Name == \"B\") || (x.Name == \"A\")"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__nested_combined__ok(bool createFromExpression)
+    {
+        var specification1 = Create<ProjectedClass>(
+            createFromExpression,
+            x => x.Name == "A",
+            x => x.Name == "A"
+        );
+
+        var specification2 = Create<ProjectedClass>(
+            createFromExpression,
+            x => x.Name == "B",
+            x => x.Name == "B"
+        );
+
+        var specification = Create<ProjectedClass>(
+            createFromExpression,
+            x => (specification1 || specification2).IsSatisfiedBy(x),
+            x => (specification1 || specification2).IsSatisfiedBy(x)
+        );
+
+        var result = specification.IsSatisfiedBy(new ProjectedClass("A"));
+
+        Assert.That(result, Is.True);
+        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo("x => (x.Name == \"A\") || (x.Name == \"B\")"));
+    }
+    
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__nested_factory__ok(bool createFromExpression)
+    {
+        var factory = new SpecificationFactory<ProjectedClass, string>(
+            p => x => x.Name == p,
+            p => x => x.Name == p
+        );
+
+        var specification = Create<ProjectedClass>(
+            createFromExpression,
+            x => factory.For("A").IsSatisfiedBy(x),
+            x => factory.For("A").IsSatisfiedBy(x)
+        );
+
+        var result = specification.IsSatisfiedBy(new ProjectedClass("A"));
+
+        Assert.That(result, Is.True);
+        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo("x => x.Name == p"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Specification__nested_factory2__ok(bool createFromExpression)
+    {
+        var factory = new SpecificationFactory<ProjectedClass, string, string>(
+            (p, _) => x => x.Name == p,
+            (p, _) => x => x.Name == p
+        );
+
+        var specification = Create<ProjectedClass>(
+            createFromExpression,
+            x => factory.For("A", "_").IsSatisfiedBy(x),
+            x => factory.For("A", "_").IsSatisfiedBy(x)
+        );
+
+        var result = specification.IsSatisfiedBy(new ProjectedClass("A"));
+
+        Assert.That(result, Is.True);
+        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo("x => x.Name == p"));
     }
 
     private Specification<TSource> Create<TSource>(

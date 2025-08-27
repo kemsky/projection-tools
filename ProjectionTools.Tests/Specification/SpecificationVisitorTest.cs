@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using AgileObjects.ReadableExpressions;
 using NUnit.Framework;
 using ProjectionTools.Expressions;
 using ProjectionTools.Specifications;
@@ -34,7 +35,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => (x == ""A"")"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x == ""A"""));
 
         result.Compile();
     }
@@ -52,7 +53,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => Not((x == ""A""))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => !(x == ""A"")"));
 
         result.Compile();
     }
@@ -70,7 +71,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => (s == ""A""))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => s == ""A"")"));
 
         result.Compile();
     }
@@ -88,7 +89,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => (s == ""A""))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => s == ""A"")"));
 
         result.Compile();
     }
@@ -106,7 +107,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => Not((s == ""A"")))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => !(s == ""A""))"));
 
         result.Compile();
     }
@@ -124,7 +125,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => (((s == ""A"") Or (s == ""A"")) Or (s == ""A"")))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => ((s == ""A"") || (s == ""A"")) || (s == ""A""))"));
 
         result.Compile();
     }
@@ -142,7 +143,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => (((s == ""A"") Or (s == ""A"")) Or (s == ""A"")))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => ((s == ""A"") || (s == ""A"")) || (s == ""A""))"));
 
         result.Compile();
     }
@@ -160,7 +161,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => (((s == ""A"") And (s == ""A"")) And (s == ""A"")))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => ((s == ""A"") && (s == ""A"")) && (s == ""A""))"));
 
         result.Compile();
     }
@@ -178,7 +179,7 @@ public class SpecificationVisitorTest
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
-        Assert.That(result.ToString(), Is.EqualTo(@"x => x.Any(s => (((s == ""A"") And (s == ""A"")) And (s == ""A"")))"));
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Any(s => ((s == ""A"") && (s == ""A"")) && (s == ""A""))"));
 
         result.Compile();
     }

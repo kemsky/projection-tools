@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using ProjectionTools.Assertions;
 using ProjectionTools.Projections;
 using ProjectionTools.Specifications;
 
@@ -9,7 +8,27 @@ namespace ProjectionTools.Expressions;
 
 internal static class ExpressionExtensions
 {
-    public static bool TryEvaluate(this Expression expression, [MaybeNullWhen(false)] out object? result)
+    public static object? Evaluate(this Expression expression)
+    {
+        if (expression.TryEvaluate(out var result))
+        {
+            return result;
+        }
+
+        throw new InvalidOperationException($"Failed to evaluate expression: {expression}");
+    }
+
+    public static object EvaluateNotNull(this Expression expression)
+    {
+        if (expression.TryEvaluate(out var result) && result is not null)
+        {
+            return result;
+        }
+
+        throw new InvalidOperationException($"Failed to evaluate expression: {expression}");
+    }
+
+    public static bool TryEvaluate(this Expression expression, out object? result)
     {
         if (expression is MemberExpression memberExpression)
         {
@@ -21,15 +40,11 @@ internal static class ExpressionExtensions
 
                     return true;
                 }
-                else if (memberExpression.Member is FieldInfo staticField)
-                {
-                    result = staticField.GetValue(null);
-
-                    return true;
-                }
                 else
                 {
-                    Defensive.Contract.Throw($"Unexpected MemberInfo: {memberExpression}");
+                    result = ((FieldInfo)memberExpression.Member).GetValue(null);
+
+                    return true;
                 }
             }
 
@@ -54,13 +69,9 @@ internal static class ExpressionExtensions
                     {
                         value = propertyInfo.GetValue(value);
                     }
-                    else if (stackExpression.Member is FieldInfo fieldInfo)
-                    {
-                        value = fieldInfo.GetValue(value);
-                    }
                     else
                     {
-                        Defensive.Contract.Throw($"Unexpected MemberInfo: {memberExpression}");
+                        value = ((FieldInfo)stackExpression.Member).GetValue(value);
                     }
                 }
 
@@ -95,18 +106,6 @@ internal static class ExpressionExtensions
     public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> predicate1, Expression<Func<T, bool>> predicate2)
     {
         return predicate1.Compose(predicate2, Expression.OrElse);
-    }
-
-    private static Expression<Func<T, bool>> Compose<T>(
-        this Expression<Func<T, bool>> predicate1,
-        Expression<Func<T, bool>> predicate2,
-        Func<Expression, Expression, BinaryExpression> compose
-    )
-    {
-        var firstBody = predicate1.Body;
-        var secondBody = new ReplaceParameterVisitor(predicate2.Parameters[0], predicate1.Parameters[0]).Visit(predicate2.Body);
-
-        return Expression.Lambda<Func<T, bool>>(compose(firstBody, secondBody), predicate1.Parameters);
     }
 
     public static Expression<Func<T, bool>> Not<T>(this Expression<Func<T, bool>> predicate)
@@ -161,12 +160,22 @@ internal static class ExpressionExtensions
 
     public static bool HasName([NotNullWhen(true)] this MemberInfo? methodInfo, string name)
     {
-        return methodInfo != null && string.Equals(methodInfo?.Name, name, StringComparison.Ordinal);
+        return string.Equals(methodInfo?.Name, name, StringComparison.Ordinal);
     }
 
     public static bool IsSpecificationType([NotNullWhen(true)] this Type? type)
     {
         return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Specification<>);
+    }
+
+    public static bool IsSpecificationFactoryType([NotNullWhen(true)] this Type? type)
+    {
+        return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(SpecificationFactory<,>);
+    }
+
+    public static bool IsSpecificationFactory2Type([NotNullWhen(true)] this Type? type)
+    {
+        return type?.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(SpecificationFactory<,,>);
     }
 
     public static bool IsSpecificationMember([NotNullWhen(true)] this MemberInfo? methodInfo)
@@ -186,5 +195,17 @@ internal static class ExpressionExtensions
         var type = methodInfo?.DeclaringType;
 
         return type.IsProjectionType();
+    }
+
+    private static Expression<Func<T, bool>> Compose<T>(
+        this Expression<Func<T, bool>> predicate1,
+        Expression<Func<T, bool>> predicate2,
+        Func<Expression, Expression, BinaryExpression> compose
+    )
+    {
+        var firstBody = predicate1.Body;
+        var secondBody = new ReplaceParameterVisitor(predicate2.Parameters[0], predicate1.Parameters[0]).Visit(predicate2.Body);
+
+        return Expression.Lambda<Func<T, bool>>(compose(firstBody, secondBody), predicate1.Parameters);
     }
 }

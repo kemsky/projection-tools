@@ -7,7 +7,7 @@ using ProjectionTools.Expressions;
 namespace ProjectionTools.Specifications;
 
 [DebuggerDisplay("{IsSatisfiedByExpression}")]
-public sealed class Specification<TSource> : ISpecificationExpressionAccessor
+public sealed class Specification<TSource> : ISpecificationExpressionAccessor, ISpecificationInternal
 {
     public Expression<Func<TSource, bool>> IsSatisfiedByExpression => _lazyExpression.Value;
 
@@ -150,5 +150,34 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor
     LambdaExpression ISpecificationExpressionAccessor.GetExpression()
     {
         return IsSatisfiedByExpression;
+    }
+
+    ISpecificationInternal ISpecificationInternal.Or(ISpecificationInternal input)
+    {
+        var inputSpec = (Specification<TSource>)input;
+        var thisSpec = (Specification<TSource>)this;
+
+        Specification<TSource> result = thisSpec || inputSpec;
+
+        return result;
+    }
+
+    ISpecificationInternal ISpecificationInternal.And(ISpecificationInternal input)
+    {
+        var inputSpec = (Specification<TSource>)input;
+        var thisSpec = (Specification<TSource>)this;
+
+        Specification<TSource> result = thisSpec && inputSpec;
+
+        return result;
+    }
+
+    ISpecificationInternal ISpecificationInternal.Not()
+    {
+        var thisSpec = (Specification<TSource>)this;
+
+        Specification<TSource> result = !thisSpec;
+
+        return result;
     }
 }

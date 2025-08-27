@@ -22,15 +22,11 @@ internal sealed class ReplaceCapturedArgumentVisitor : ExpressionVisitor
         // this class belongs to method (also generated class) 
 
         // memberInfo has the same the name and type...
-        if (string.Equals(memberExpression.Member.Name, _parameter.Name, StringComparison.Ordinal)
-            && memberExpression.Type == _parameter.ParameterType
-        )
+        if (string.Equals(memberExpression.Member.Name, _parameter.Name, StringComparison.Ordinal) && memberExpression.Type == _parameter.ParameterType)
         {
             // memberInfo is property/field of ConstantExpression
             // memberInfo has DeclaringType compiler generated
-            if (memberExpression.Expression is ConstantExpression
-                && memberExpression.Member.DeclaringType?.GetCustomAttribute<CompilerGeneratedAttribute>(inherit: false) != null
-            )
+            if (memberExpression.Expression is ConstantExpression && memberExpression.Member.DeclaringType?.GetCustomAttribute<CompilerGeneratedAttribute>(inherit: false) != null)
             {
                 return _replacement;
             }

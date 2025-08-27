@@ -4,7 +4,7 @@ using ProjectionTools.Assertions;
 
 namespace ProjectionTools.Specifications;
 
-public sealed class SpecificationFactory<TSource, TParam>
+public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactoryInternal
 {
     internal Func<TParam, Expression<Func<TSource, bool>>> ExpressionFactory => _lazyExpressionFactory.Value;
 
@@ -53,5 +53,10 @@ public sealed class SpecificationFactory<TSource, TParam>
             new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(param), LazyThreadSafetyMode.PublicationOnly),
             new Lazy<Func<TSource, bool>>(() => lazyDelegateFactory.Value(param), LazyThreadSafetyMode.PublicationOnly)
         );
+    }
+
+    ISpecificationInternal ISpecificationFactoryInternal.For(object? arg)
+    {
+        return For((TParam)arg!);
     }
 }
