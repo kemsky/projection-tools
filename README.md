@@ -155,6 +155,8 @@ public class UserController : Controller
 }
 ```
 
+Added `SpecificationVisitor` to rewrite specifications to plain expressions, can be used with EF.
+
 ## Projections
 
 My initial goal was to replace packages like AutoMapper and similar.
