@@ -10,26 +10,8 @@ namespace ProjectionTools.Tests.Expressions;
 
 [Parallelizable(ParallelScope.All)]
 [TestFixture]
-public class ExpressionExtensionsTest
+public partial class ExpressionExtensionsTest
 {
-    [Test]
-    public void TryEvaluate__Binary()
-    {
-        Expression expression1 = Expression.MakeMemberAccess(null, typeof(TryEvaluateTest).GetField("Instance", BindingFlags.Static | BindingFlags.Public)!);
-        Expression expression = Expression.MakeMemberAccess(expression1, typeof(TryEvaluateTest).GetProperty("A")!);
-
-        Assert.That(expression.TryEvaluate(out _), Is.False);
-    }
-
-    [Test]
-    public void TryEvaluate__Constant()
-    {
-        Expression expression = Expression.Constant(true);
-
-        Assert.That(expression.TryEvaluate(out var result), Is.True);
-        Assert.That(result, Is.True);
-    }
-
     [Test]
     public void Evaluate_Impossible()
     {
@@ -233,12 +215,5 @@ public class ExpressionExtensionsTest
         public string A { get; } = "A";
 
         public long B { get; } = 1L;
-    }
-
-    private class TryEvaluateTest
-    {
-        public static readonly TryEvaluateTest Instance = new TryEvaluateTest();
-
-        public string A { get; } = "A";
     }
 }

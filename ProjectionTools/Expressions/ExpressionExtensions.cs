@@ -34,18 +34,9 @@ internal static class ExpressionExtensions
         {
             if (memberExpression.Expression == null)
             {
-                if (memberExpression.Member is PropertyInfo staticProperty)
-                {
-                    result = staticProperty.GetValue(null);
+                result = memberExpression.GetMemberValue();
 
-                    return true;
-                }
-                else
-                {
-                    result = ((FieldInfo)memberExpression.Member).GetValue(null);
-
-                    return true;
-                }
+                return true;
             }
 
             var stack = new Stack<MemberExpression>();
@@ -59,20 +50,28 @@ internal static class ExpressionExtensions
                 e = e.Expression as MemberExpression;
             }
 
-            if (stack.Peek().Expression is ConstantExpression constantExpression)
+            var root = stack.Peek().Expression;
+
+            if (root is ConstantExpression constantExpression)
             {
                 var value = constantExpression.Value;
 
                 while (stack.TryPop(out var stackExpression))
                 {
-                    if (stackExpression.Member is PropertyInfo propertyInfo)
-                    {
-                        value = propertyInfo.GetValue(value);
-                    }
-                    else
-                    {
-                        value = ((FieldInfo)stackExpression.Member).GetValue(value);
-                    }
+                    value = stackExpression.GetMemberValue(value);
+                }
+
+                result = value;
+
+                return true;
+            }
+            else if (root == null)
+            {
+                object? value = null;
+
+                while (stack.TryPop(out var stackExpression))
+                {
+                    value = stackExpression.GetMemberValue(value);
                 }
 
                 result = value;
@@ -207,5 +206,18 @@ internal static class ExpressionExtensions
         var secondBody = new ReplaceParameterVisitor(predicate2.Parameters[0], predicate1.Parameters[0]).Visit(predicate2.Body);
 
         return Expression.Lambda<Func<T, bool>>(compose(firstBody, secondBody), predicate1.Parameters);
+    }
+
+    // probably it makes sense to limit eval to readonly members
+    private static object? GetMemberValue(this MemberExpression expression, object? _this = null)
+    {
+        if (expression.Member is PropertyInfo staticProperty)
+        {
+            return staticProperty.GetValue(_this);
+        }
+        else
+        {
+            return ((FieldInfo)expression.Member).GetValue(_this);
+        }
     }
 }
