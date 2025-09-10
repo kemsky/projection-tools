@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Files/">
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/publish.yml" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="ProjectionTools.Tests/ProjectionTools.Tests.csproj" />
+  <Project Path="ProjectionTools/ProjectionTools.csproj" />
+</Solution>

@@ -14,7 +14,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Expression__ok(bool createFromExpression)
+    public void Specification__Expression(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -30,7 +30,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Delegate__ok(bool createFromExpression)
+    public void Specification__Delegate(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -50,7 +50,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Implicit__Expression__ok(bool createFromExpression)
+    public void Specification__Implicit__Expression(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -66,7 +66,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Implicit__Delegate__ok(bool createFromExpression)
+    public void Specification__Implicit__Delegate(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -90,7 +90,7 @@ public class SpecificationTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void Specification_ApplyTo__Expression__ok(bool createFromExpression, bool applyToExpression)
+    public void Specification_ApplyTo__Expression(bool createFromExpression, bool applyToExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -115,7 +115,7 @@ public class SpecificationTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void Specification_ApplyTo__Delegate__ok(bool createFromExpression, bool applyToExpression)
+    public void Specification_ApplyTo__Delegate(bool createFromExpression, bool applyToExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -159,7 +159,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_true__ok(bool createFromExpression)
+    public void Specification__Operator_true(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -184,7 +184,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_false__ok(bool createFromExpression)
+    public void Specification__Operator_false(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -213,7 +213,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_Not__Expression__ok(bool createFromExpression)
+    public void Specification__Operator_Not__Expression(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -231,7 +231,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_Not__Delegate__ok(bool createFromExpression)
+    public void Specification__Operator_Not__Delegate(bool createFromExpression)
     {
         var specification = Create<string>(
             createFromExpression,
@@ -253,7 +253,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_And__Expression__ok(bool createFromExpression)
+    public void Specification__Operator_And__Expression(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -277,7 +277,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_And__Delegate__ok(bool createFromExpression)
+    public void Specification__Operator_And__Delegate(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -305,7 +305,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_Or__Expression__ok(bool createFromExpression)
+    public void Specification__Operator_Or__Expression(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -329,7 +329,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__Operator_Or__Delegate__ok(bool createFromExpression)
+    public void Specification__Operator_Or__Delegate(bool createFromExpression)
     {
         var specification1 = Create<string>(
             createFromExpression,
@@ -355,7 +355,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__nested__ok(bool createFromExpression)
+    public void Specification__nested(bool createFromExpression)
     {
         var specification1 = Create<ProjectedClass>(
             createFromExpression,
@@ -378,7 +378,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__nested_combined__ok(bool createFromExpression)
+    public void Specification__nested_combined(bool createFromExpression)
     {
         var specification1 = Create<ProjectedClass>(
             createFromExpression,
@@ -407,7 +407,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__nested_factory__ok(bool createFromExpression)
+    public void Specification__nested_factory(bool createFromExpression)
     {
         var factory = new SpecificationFactory<ProjectedClass, string>(
             p => x => x.Name == p,
@@ -429,7 +429,7 @@ public class SpecificationTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Specification__nested_factory2__ok(bool createFromExpression)
+    public void Specification__nested_factory2(bool createFromExpression)
     {
         var factory = new SpecificationFactory<ProjectedClass, string, string>(
             (p, _) => x => x.Name == p,

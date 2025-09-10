@@ -29,7 +29,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__IsSatisfiedBy_invocation(SpecSource source)
+    public void Specification__IsSatisfiedBy_Invocation(SpecSource source)
     {
         var expression = CreateCallExpression(source);
 
@@ -47,7 +47,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__IsSatisfiedBy_negated_invocation(SpecSource source)
+    public void Specification__IsSatisfiedBy_Negated_Invocation(SpecSource source)
     {
         var expression = CreateNegatedCallExpression(source);
 
@@ -65,7 +65,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__IsSatisfiedBy_reference(SpecSource source)
+    public void Specification__IsSatisfiedBy_Reference(SpecSource source)
     {
         var expression = CreateReferenceExpression(source);
 
@@ -83,7 +83,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__value(SpecSource source)
+    public void Specification__Value(SpecSource source)
     {
         var expression = CreateValueExpression(source);
 
@@ -101,7 +101,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__negated_value(SpecSource source)
+    public void Specification__Negated_Value(SpecSource source)
     {
         var expression = CreateNegatedValueExpression(source);
 
@@ -119,7 +119,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__combined_or_value(SpecSource source)
+    public void Specification__Combined_Or_Value(SpecSource source)
     {
         var expression = CreateCombinedOrExpression(source);
 
@@ -137,7 +137,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__combined_bit_or_value(SpecSource source)
+    public void Specification__Combined_Bit_Or_Value(SpecSource source)
     {
         var expression = CreateCombinedBitOrExpression(source);
 
@@ -155,7 +155,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__combined_and_value(SpecSource source)
+    public void Specification__Combined_And_Value(SpecSource source)
     {
         var expression = CreateCombinedAndExpression(source);
 
@@ -173,7 +173,7 @@ public class SpecificationVisitorTest
     [TestCase(SpecSource.StaticField)]
     [TestCase(SpecSource.StaticProperty)]
     [TestCase(SpecSource.Parameter)]
-    public void Specification__combined_bit_and_value(SpecSource source)
+    public void Specification__Combined_Bit_And_Value(SpecSource source)
     {
         var expression = CreateCombinedBitAndExpression(source);
 

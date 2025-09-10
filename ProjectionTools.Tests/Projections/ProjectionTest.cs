@@ -13,7 +13,7 @@ public class ProjectionTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Projection__Expression__ok(bool createFromExpression)
+    public void Projection__Expression(bool createFromExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -29,7 +29,7 @@ public class ProjectionTest
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void Projection__Delegate__ok(bool createFromExpression)
+    public void Projection__Delegate(bool createFromExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -89,7 +89,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void ApplyTo__Expression__ok(bool createFromExpression, bool applyToExpression)
+    public void ApplyTo__Expression(bool createFromExpression, bool applyToExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -112,7 +112,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void ApplyTo__Delegate__ok(bool createFromExpression, bool applyToExpression)
+    public void ApplyTo__Delegate(bool createFromExpression, bool applyToExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -135,7 +135,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void ApplyTo_projection__Expression__ok(bool createFromExpression, bool applyToExpression)
+    public void ApplyTo_projection__Expression(bool createFromExpression, bool applyToExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -159,7 +159,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void ApplyTo_projection__Delegate__ok(bool createFromExpression, bool applyToExpression)
+    public void ApplyTo_projection__Delegate(bool createFromExpression, bool applyToExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -204,7 +204,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void To__Expression__ok(bool createFromExpression, bool toExpression)
+    public void To__Expression(bool createFromExpression, bool toExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -227,7 +227,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void To__Delegate__ok(bool createFromExpression, bool toExpression)
+    public void To__Delegate(bool createFromExpression, bool toExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -250,7 +250,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void To_projection__Expression__ok(bool createFromExpression, bool toExpression)
+    public void To_projection__Expression(bool createFromExpression, bool toExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,
@@ -274,7 +274,7 @@ public class ProjectionTest
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(false, false)]
-    public void To_projection__Delegate__ok(bool createFromExpression, bool toExpression)
+    public void To_projection__Delegate(bool createFromExpression, bool toExpression)
     {
         var projection = Create<ProjectedClass, string>(
             createFromExpression,

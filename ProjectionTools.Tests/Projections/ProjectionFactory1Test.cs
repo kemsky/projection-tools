@@ -16,7 +16,7 @@ public class ProjectionFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void ProjectionFactory__Expression__ok(bool createFromExpression)
+    public void ProjectionFactory__Expression(bool createFromExpression)
     {
         var projectionFactory = Create<ProjectedClass, string, string>(
             createFromExpression,
@@ -32,7 +32,7 @@ public class ProjectionFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void ProjectionFactory__Delegate__ok(bool createFromExpression)
+    public void ProjectionFactory__Delegate(bool createFromExpression)
     {
         var projectionFactory = Create<ProjectedClass, string, string>(
             createFromExpression,
@@ -54,7 +54,7 @@ public class ProjectionFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void ProjectionFactory__For__Param__ok(bool createFromExpression)
+    public void ProjectionFactory__For__Param(bool createFromExpression)
     {
         var projectionFactory = Create<ProjectedClass, string, string>(
             createFromExpression,
@@ -71,7 +71,7 @@ public class ProjectionFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void ProjectionFactory__For__BoundParam__ok(bool createFromExpression)
+    public void ProjectionFactory__For__BoundParam(bool createFromExpression)
     {
         var projectionFactory = Create<ProjectedClass, string, string>(
             createFromExpression,

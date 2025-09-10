@@ -28,7 +28,7 @@ public class ProjectionVisitorTest
     [TestCase(ProjectionSource.StaticField)]
     [TestCase(ProjectionSource.StaticProperty)]
     [TestCase(ProjectionSource.Parameter)]
-    public void Projection__Project_invocation(ProjectionSource source)
+    public void Projection__Project_Invocation(ProjectionSource source)
     {
         var expression = CreateCallExpression(source);
 
@@ -46,7 +46,7 @@ public class ProjectionVisitorTest
     [TestCase(ProjectionSource.StaticField)]
     [TestCase(ProjectionSource.StaticProperty)]
     [TestCase(ProjectionSource.Parameter)]
-    public void Projection__Project_reference(ProjectionSource source)
+    public void Projection__Project_Reference(ProjectionSource source)
     {
         var expression = CreateReferenceExpression(source);
 
@@ -64,7 +64,7 @@ public class ProjectionVisitorTest
     [TestCase(ProjectionSource.StaticField)]
     [TestCase(ProjectionSource.StaticProperty)]
     [TestCase(ProjectionSource.Parameter)]
-    public void Projection__value(ProjectionSource source)
+    public void Projection__Value(ProjectionSource source)
     {
         var expression = CreateValueExpression(source);
 

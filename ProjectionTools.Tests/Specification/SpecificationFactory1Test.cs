@@ -14,7 +14,7 @@ public class SpecificationFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void SpecificationFactory__Create__Expression__ok(bool createFromExpression)
+    public void SpecificationFactory__Create__Expression(bool createFromExpression)
     {
         var specificationFactory = Create<string, string>(
             createFromExpression,
@@ -30,7 +30,7 @@ public class SpecificationFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void SpecificationFactory__Create__Delegate__ok(bool createFromExpression)
+    public void SpecificationFactory__Create__Delegate(bool createFromExpression)
     {
         var specificationFactory = Create<string, string>(
             createFromExpression,
@@ -50,7 +50,7 @@ public class SpecificationFactory1Test
     [Test]
     [TestCase(true)]
     [TestCase(false)]
-    public void SpecificationFactory__For__Expression__ok(bool createFromExpression)
+    public void SpecificationFactory__For__Expression(bool createFromExpression)
     {
         var specificationFactory = Create<string, string>(
             createFromExpression,
@@ -84,7 +84,6 @@ public class SpecificationFactory1Test
     }
 
     #endregion
-
 
     private SpecificationFactory<TSource, TParam> Create<TSource, TParam>(
         bool createFromExpression,
