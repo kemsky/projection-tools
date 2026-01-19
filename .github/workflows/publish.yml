@@ -19,9 +19,9 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Restore dependencies
-        run: dotnet restore ProjectionTools.sln
+        run: dotnet restore ProjectionTools.slnx
       - name: Build
-        run: dotnet build -c Release -p:ContinuousIntegrationBuild=true --no-restore ProjectionTools.sln
+        run: dotnet build -c Release -p:ContinuousIntegrationBuild=true --no-restore ProjectionTools.slnx
       - name: Test
         run: dotnet test -c Release /p:CollectCoverage=true --no-build --no-restore --verbosity normal ProjectionTools.Tests/ProjectionTools.Tests.csproj
       - name: Pack nugets
