@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using DelegateDecompiler;
 using ProjectionTools.Assertions;
+using ProjectionTools.Expressions;
 
 namespace ProjectionTools.Specifications;
 
@@ -55,8 +56,43 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
         );
     }
 
+    /// <summary>
+    /// Experimental. Can be used in nested queries.
+    /// <br/>
+    /// (!) Inconsistent behavior expression vs delegate when factories contain IIF.
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    public Specification<TSource> For(Func<TParam> param)
+    {
+        var expressionFactory = ExpressionFactory;
+        var delegateFactory = DelegateFactory;
+
+        // todo: not consistent behavior expression vs delegate when factories contain IIF
+        return new(
+            new Lazy<Expression<Func<TSource, bool>>>(() => expressionFactory(param()).BindArgument((Expression<Func<TParam>>)param.Decompile(), expressionFactory.Method.GetParameters()[0]), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Func<TSource, bool>>(() => source => delegateFactory(param())(source), LazyThreadSafetyMode.PublicationOnly)
+        );
+    }
+
     ISpecificationInternal ISpecificationFactoryInternal.For(object? arg)
     {
         return For((TParam)arg!);
+    }
+
+    ISpecificationInternal ISpecificationFactoryInternal.For(LambdaExpression arg)
+    {
+        var expressionFactory = ExpressionFactory;
+        var delegateFactory = DelegateFactory;
+
+        var param = (Expression<Func<TParam>>)arg;
+
+        TParam value = default!;
+
+        // todo: not consistent behavior expression vs delegate when factories contain IIF
+        return new Specification<TSource>(
+            new Lazy<Expression<Func<TSource, bool>>>(() => expressionFactory(value).BindArgument(param, expressionFactory.Method.GetParameters()[0])),
+            new Lazy<Func<TSource, bool>>(() => source => delegateFactory(param.Compile()())(source), LazyThreadSafetyMode.PublicationOnly)
+        );
     }
 }

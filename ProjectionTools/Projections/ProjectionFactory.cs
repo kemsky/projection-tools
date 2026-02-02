@@ -55,7 +55,13 @@ public sealed class ProjectionFactory<TSource, TResult, TParam>
         return new(ExpressionFactory(param), DelegateFactory(param));
     }
 
-    // experimental
+    /// <summary>
+    /// Experimental. Can be used in nested queries.
+    /// <br/>
+    /// (!) Inconsistent behavior expression vs delegate when factories contain IIF.
+    /// </summary>
+    /// <param name="param"></param>
+    /// <returns></returns>
     public Projection<TSource, TResult> For(Func<TParam> param)
     {
         var expressionFactory = ExpressionFactory;

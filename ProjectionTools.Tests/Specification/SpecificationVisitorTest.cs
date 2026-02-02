@@ -23,6 +23,34 @@ public class SpecificationVisitorTest
     private Specification<string> PropertySpec { get; } = CreateSpec;
 
     [Test]
+    public void SpecificationFactory__For_in_Expression__ok()
+    {
+        var factory = new SpecificationFactory<string, int>(p => s => s.Length == p);
+
+        Expression<Func<List<string>, bool>> expression = x => x.Where(factory.For(() => x.Count)).Any();
+
+        var result = (LambdaExpression)Visitor.Visit(expression);
+
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Where(s => s.Length == x.Count).Any()"));
+
+        result.Compile();
+    }
+
+    [Test]
+    public void SpecificationFactory__For2_in_Expression__ok()
+    {
+        var factory = new SpecificationFactory<string, int, bool>((p1, p2) => s => s.Length == p1 && p2);
+
+        Expression<Func<List<string>, bool>> expression = x => x.Where(factory.For(() => x.Count, () => true)).Any();
+
+        var result = (LambdaExpression)Visitor.Visit(expression);
+
+        Assert.That(result.ToReadableString(), Is.EqualTo(@"x => x.Where(s => (s.Length == x.Count) && true).Any()"));
+
+        result.Compile();
+    }
+
+    [Test]
     [TestCase(SpecSource.Local)]
     [TestCase(SpecSource.Field)]
     [TestCase(SpecSource.Property)]
