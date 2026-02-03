@@ -27,7 +27,7 @@ public class SpecificationVisitorTest
     {
         var factory = new SpecificationFactory<string, int>(p => s => s.Length == p);
 
-        Expression<Func<List<string>, bool>> expression = x => x.Where(factory.For(() => x.Count)).Any();
+        Expression<Func<List<string>, bool>> expression = x => x.Where(factory.For(x.Count)).Any();
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 
@@ -41,7 +41,7 @@ public class SpecificationVisitorTest
     {
         var factory = new SpecificationFactory<string, int, bool>((p1, p2) => s => s.Length == p1 && p2);
 
-        Expression<Func<List<string>, bool>> expression = x => x.Where(factory.For(() => x.Count, () => true)).Any();
+        Expression<Func<List<string>, bool>> expression = x => x.Where(factory.For(x.Count, true)).Any();
 
         var result = (LambdaExpression)Visitor.Visit(expression);
 

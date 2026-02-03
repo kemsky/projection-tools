@@ -21,17 +21,15 @@ internal sealed class SpecificationFactoryInvocationVisitor : ExpressionVisitor
 
             var factory = node.Object.EvaluateNotNull();
 
-            if (node.Arguments[0] is LambdaExpression lambda)
+            if (node.Arguments[0].TryEvaluate(out var arg))
             {
-                var spec = ((ISpecificationFactoryInternal)factory).For(lambda);
+                var spec = ((ISpecificationFactoryInternal)factory).For(arg);
 
                 return VisitBase(Expression.Constant(spec));
             }
             else
             {
-                var arg = node.Arguments[0].Evaluate();
-
-                var spec = ((ISpecificationFactoryInternal)factory).For(arg);
+                var spec = ((ISpecificationFactoryInternal)factory).For(node.Arguments[0]);
 
                 return VisitBase(Expression.Constant(spec));
             }
@@ -43,20 +41,57 @@ internal sealed class SpecificationFactoryInvocationVisitor : ExpressionVisitor
 
             var factory = node.Object.EvaluateNotNull();
 
-            if (node.Arguments[0] is LambdaExpression lambda1 && node.Arguments[1] is LambdaExpression lambda2)
+            if (node.Method.GetParameters().Length == 1)
             {
-                var spec = ((ISpecificationFactory2Internal)factory).For(lambda1, lambda2);
+                if (node.Arguments[0].TryEvaluate(out var arg))
+                {
+                    var spec = ((ISpecificationFactory2Internal)factory).For(arg);
 
-                return VisitBase(Expression.Constant(spec));
+                    return VisitBase(Expression.Constant(spec));
+                }
+                else
+                {
+                    var spec = ((ISpecificationFactory2Internal)factory).For(node.Arguments[0]);
+
+                    return VisitBase(Expression.Constant(spec));
+                }
             }
             else
             {
-                var arg1 = node.Arguments[0].Evaluate();
-                var arg2 = node.Arguments[1].Evaluate();
+                if (node.Arguments[0].TryEvaluate(out var arg1))
+                {
+                    var specFactory = ((ISpecificationFactory2Internal)factory).For(arg1);
 
-                var spec = ((ISpecificationFactory2Internal)factory).For(arg1, arg2);
+                    if (node.Arguments[1].TryEvaluate(out var arg2))
+                    {
+                        var spec = specFactory.For(arg2);
 
-                return VisitBase(Expression.Constant(spec));
+                        return VisitBase(Expression.Constant(spec));
+                    }
+                    else
+                    {
+                        var spec = specFactory.For(node.Arguments[1]);
+
+                        return VisitBase(Expression.Constant(spec));
+                    }
+                }
+                else
+                {
+                    var specFactory = ((ISpecificationFactory2Internal)factory).For(node.Arguments[0]);
+
+                    if (node.Arguments[1].TryEvaluate(out var arg2))
+                    {
+                        var spec = specFactory.For(arg2);
+
+                        return VisitBase(Expression.Constant(spec));
+                    }
+                    else
+                    {
+                        var spec = specFactory.For(node.Arguments[1]);
+
+                        return VisitBase(Expression.Constant(spec));
+                    }
+                }
             }
         }
 

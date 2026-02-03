@@ -87,23 +87,6 @@ public class SpecificationFactory2Test
         Assert.That(result, Is.True);
     }
 
-    [Test]
-    [TestCase(true)]
-    [TestCase(false)]
-    public void SpecificationFactory__For__Nested_Expression__ok(bool createFromExpression)
-    {
-        var specificationFactory = Create<string, int, bool>(
-            createFromExpression,
-            (param1, param2) => x => x.Length == param1 && param2,
-            (param1, param2) => x => x.Length == param1 && param2
-        );
-
-        var specification = specificationFactory.For(() => A, () => B);
-
-        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo(@"x => (x.Length == A) && B"));
-        Assert.That(specification.IsSatisfiedBy("A"), Is.True);
-    }
-
     #endregion
 
     #region For Partial
@@ -142,23 +125,6 @@ public class SpecificationFactory2Test
         var result = specificationFactory1.IsSatisfiedBy("A");
 
         Assert.That(result, Is.True);
-    }
-
-    [Test]
-    [TestCase(true)]
-    [TestCase(false)]
-    public void SpecificationFactory__For_Partial__Nested_Expression__ok(bool createFromExpression)
-    {
-        var specificationFactory = Create<string, int, bool>(
-            createFromExpression,
-            (param1, param2) => x => x.Length == param1 && param2,
-            (param1, param2) => x => x.Length == param1 && param2
-        );
-
-        var specification = specificationFactory.For(() => A).For(() => B);
-
-        Assert.That(specification.IsSatisfiedByExpression.ToReadableString(), Is.EqualTo(@"x => (x.Length == A) && B"));
-        Assert.That(specification.IsSatisfiedBy("A"), Is.True);
     }
 
     #endregion

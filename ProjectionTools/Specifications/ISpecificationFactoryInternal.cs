@@ -6,5 +6,5 @@ internal interface ISpecificationFactoryInternal
 {
     ISpecificationInternal For(object? arg);
 
-    ISpecificationInternal For(LambdaExpression arg);
+    ISpecificationInternal For(Expression arg);
 }

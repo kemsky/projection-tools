@@ -132,6 +132,15 @@ internal static class ExpressionExtensions
         return Expression.Lambda<Func<TSource, TDestination>>(body, expression.Parameters);
     }
 
+    public static TExpression BindArgument<TExpression>(
+        this TExpression expression,
+        Expression parameterBody,
+        ParameterInfo parameterInfo
+    ) where TExpression : Expression
+    {
+        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody).Visit(expression);
+    }
+
     public static TExpression BindArgument<TExpression, TArg>(
         this TExpression expression,
         Expression<Func<TArg>> argumentExpression,

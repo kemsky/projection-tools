@@ -44,7 +44,6 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             }
             else
             {
-
                 rightSpec = (ISpecificationInternal)VisitBinary((BinaryExpression)binaryExpression.Right).EvaluateNotNull();
             }
 
@@ -80,7 +79,6 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             }
             else
             {
-
                 rightSpec = (ISpecificationInternal)VisitBinary((BinaryExpression)binaryExpression.Right).EvaluateNotNull();
             }
 

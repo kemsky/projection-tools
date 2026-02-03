@@ -6,17 +6,34 @@ using ProjectionTools.Expressions;
 
 namespace ProjectionTools.Specifications;
 
+/// <summary>
+/// Represents a specification that can be applied to an object of type <typeparamref name="TSource"/>.
+/// A specification is a business rule that can be combined with other specifications.
+/// It encapsulates both an <see cref="Expression"/> for querying and a <see cref="Func{T, TResult}"/> for in-memory evaluation.
+/// </summary>
+/// <typeparam name="TSource">The type of the object to which the specification is applied.</typeparam>
 [DebuggerDisplay("{IsSatisfiedByExpression}")]
 public sealed class Specification<TSource> : ISpecificationExpressionAccessor, ISpecificationInternal
 {
+    /// <summary>
+    /// Gets the expression that represents the specification.
+    /// </summary>
     public Expression<Func<TSource, bool>> IsSatisfiedByExpression => _lazyExpression.Value;
 
+    /// <summary>
+    /// Gets the compiled delegate that represents the specification for in-memory evaluation.
+    /// </summary>
     public Func<TSource, bool> IsSatisfiedBy => _lazyDelegate.Value;
 
     private readonly Lazy<Func<TSource, bool>> _lazyDelegate;
 
     private readonly Lazy<Expression<Func<TSource, bool>>> _lazyExpression;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Specification{TSource}"/> class from an expression.
+    /// The delegate for in-memory evaluation will be created by compiling the expression.
+    /// </summary>
+    /// <param name="expressionFunc">The expression representing the specification.</param>
     public Specification(Expression<Func<TSource, bool>> expressionFunc)
     {
         Defensive.Contract.ArgumentNotNull(expressionFunc);
@@ -31,6 +48,12 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         }, LazyThreadSafetyMode.PublicationOnly);
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Specification{TSource}"/> class with an optional expression and a delegate.
+    /// If the expression is not provided, it will be created by decompiling the delegate.
+    /// </summary>
+    /// <param name="expressionFunc">The expression representing the specification.</param>
+    /// <param name="delegateFunc">The delegate representing the specification for in-memory evaluation.</param>
     public Specification(Expression<Func<TSource, bool>>? expressionFunc, Func<TSource, bool> delegateFunc)
     {
         Defensive.Contract.ArgumentNotNull(delegateFunc);
@@ -52,6 +75,12 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         _lazyDelegate = lazyDelegate;
     }
 
+    /// <summary>
+    /// Combines two specifications using a logical AND operation.
+    /// </summary>
+    /// <param name="spec1">The first specification.</param>
+    /// <param name="spec2">The second specification.</param>
+    /// <returns>A new specification that is the logical AND of the two specifications.</returns>
     public static Specification<TSource> operator &(Specification<TSource> spec1, Specification<TSource> spec2)
     {
         Defensive.Contract.ArgumentNotNull(spec1);
@@ -63,6 +92,12 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         );
     }
 
+    /// <summary>
+    /// Combines two specifications using a logical OR operation.
+    /// </summary>
+    /// <param name="spec1">The first specification.</param>
+    /// <param name="spec2">The second specification.</param>
+    /// <returns>A new specification that is the logical OR of the two specifications.</returns>
     public static Specification<TSource> operator |(Specification<TSource> spec1, Specification<TSource> spec2)
     {
         Defensive.Contract.ArgumentNotNull(spec1);
@@ -74,6 +109,11 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         );
     }
 
+    /// <summary>
+    /// Negates a specification.
+    /// </summary>
+    /// <param name="specification">The specification to negate.</param>
+    /// <returns>A new specification that is the logical negation of the original specification.</returns>
     public static Specification<TSource> operator !(Specification<TSource> specification)
     {
         Defensive.Contract.ArgumentNotNull(specification);
@@ -84,12 +124,27 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         );
     }
 
-    // false operator required to prevent short-circuit and force evaluate both specs: spec1 && spec2
+    /// <summary>
+    /// Defines the false operator for the specification. This is required to enable the use of `&amp;&amp;` and `||` operators,
+    /// but it forces the evaluation of both operands by always returning false, thus preserving the behavior of `&amp;` and `|`.
+    /// </summary>
+    /// <param name="_">The specification instance.</param>
+    /// <returns>Always <c>false</c>.</returns>
     public static bool operator false(Specification<TSource> _) => false;
 
-    // true operator used by if, while etc. required as pair to the false operator
+    /// <summary>
+    /// Defines the true operator for the specification. This is required as a pair to the false operator.
+    /// </summary>
+    /// <param name="_">The specification instance.</param>
+    /// <returns>Always <c>false</c>.</returns>
     public static bool operator true(Specification<TSource> _) => false;
 
+    /// <summary>
+    /// Applies the specification to a different type by using a projection expression.
+    /// </summary>
+    /// <typeparam name="TProjection">The type to project from.</typeparam>
+    /// <param name="expression">The projection expression from <typeparamref name="TProjection"/> to <typeparamref name="TSource"/>.</param>
+    /// <returns>A new specification for the <typeparamref name="TProjection"/> type.</returns>
     public Specification<TProjection> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>> expression)
     {
         Defensive.Contract.ArgumentNotNull(expression);
@@ -108,6 +163,13 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         );
     }
 
+    /// <summary>
+    /// Applies the specification to a different type by using a projection expression and delegate.
+    /// </summary>
+    /// <typeparam name="TProjection">The type to project from.</typeparam>
+    /// <param name="expressionFunc">The projection expression from <typeparamref name="TProjection"/> to <typeparamref name="TSource"/>.</param>
+    /// <param name="delegateFunc">The projection delegate from <typeparamref name="TProjection"/> to <typeparamref name="TSource"/>.</param>
+    /// <returns>A new specification for the <typeparamref name="TProjection"/> type.</returns>
     public Specification<TProjection> ApplyTo<TProjection>(Expression<Func<TProjection, TSource>>? expressionFunc, Func<TProjection, TSource> delegateFunc)
     {
         Defensive.Contract.ArgumentNotNull(delegateFunc);
@@ -127,11 +189,19 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
         );
     }
 
+    /// <summary>
+    /// Allows for implicit conversion of a <see cref="Specification{TSource}"/> to a <see cref="Func{TSource, TResult}"/>.
+    /// </summary>
+    /// <param name="f">The specification to convert.</param>
     public static implicit operator Func<TSource, bool>(Specification<TSource> f)
     {
         return f.IsSatisfiedBy;
     }
 
+    /// <summary>
+    /// Allows for implicit conversion of a <see cref="Specification{TSource}"/> to an <see cref="Expression{TDelegate}"/>.
+    /// </summary>
+    /// <param name="f">The specification to convert.</param>
     public static implicit operator Expression<Func<TSource, bool>>(Specification<TSource> f)
     {
         return f.IsSatisfiedByExpression;
