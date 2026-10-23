@@ -33,7 +33,7 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             }
             else
             {
-                leftSpec = (ISpecificationInternal)VisitBinary((BinaryExpression)binaryExpression.Left).EvaluateNotNull();
+                leftSpec = (ISpecificationInternal)VisitBase(binaryExpression.Left).EvaluateNotNull();
             }
 
             if (binaryExpression.Right.TryEvaluate(out var rightValue))
@@ -44,7 +44,7 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             }
             else
             {
-                rightSpec = (ISpecificationInternal)VisitBinary((BinaryExpression)binaryExpression.Right).EvaluateNotNull();
+                rightSpec = (ISpecificationInternal)VisitBase(binaryExpression.Right).EvaluateNotNull();
             }
 
             return VisitBase(Expression.Constant(leftSpec.Or(rightSpec)));
@@ -68,7 +68,7 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             }
             else
             {
-                leftSpec = (ISpecificationInternal)VisitBinary((BinaryExpression)binaryExpression.Left).EvaluateNotNull();
+                leftSpec = (ISpecificationInternal)VisitBase(binaryExpression.Left).EvaluateNotNull();
             }
 
             if (binaryExpression.Right.TryEvaluate(out var rightValue))
@@ -79,7 +79,7 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             }
             else
             {
-                rightSpec = (ISpecificationInternal)VisitBinary((BinaryExpression)binaryExpression.Right).EvaluateNotNull();
+                rightSpec = (ISpecificationInternal)VisitBase(binaryExpression.Right).EvaluateNotNull();
             }
 
             return VisitBase(Expression.Constant(leftSpec.And(rightSpec)));
@@ -97,7 +97,7 @@ internal sealed class SpecificationOperatorsVisitor : ExpressionVisitor
             && unaryExpression.Method.HasName("op_LogicalNot")
         )
         {
-            var spec = (ISpecificationInternal)unaryExpression.Operand.EvaluateNotNull();
+            var spec = (ISpecificationInternal)VisitBase(unaryExpression.Operand).EvaluateNotNull();
 
             return VisitBase(Expression.Constant(spec.Not()));
         }

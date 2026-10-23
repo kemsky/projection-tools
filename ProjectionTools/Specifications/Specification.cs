@@ -40,12 +40,7 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
 
         _lazyExpression = new Lazy<Expression<Func<TSource, bool>>>(() => expressionFunc.Rewrite(), LazyThreadSafetyMode.PublicationOnly);
 
-        _lazyDelegate = new Lazy<Func<TSource, bool>>(() =>
-        {
-            var compiled = expressionFunc.Compile();
-
-            return compiled;
-        }, LazyThreadSafetyMode.PublicationOnly);
+        _lazyDelegate = new Lazy<Func<TSource, bool>>(() => _lazyExpression.Value.Compile(), LazyThreadSafetyMode.PublicationOnly);
     }
 
     /// <summary>

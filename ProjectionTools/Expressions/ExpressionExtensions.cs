@@ -220,6 +220,11 @@ internal static class ExpressionExtensions
     // probably it makes sense to limit eval to readonly members
     private static object? GetMemberValue(this MemberExpression expression, object? _this = null)
     {
+        if (_this is null && expression.Member.IsInstanceMember())
+        {
+            throw new InvalidOperationException($"Failed to evaluate expression '{expression}': instance member '{expression.Member.Name}' is accessed on null object");
+        }
+
         if (expression.Member is PropertyInfo staticProperty)
         {
             return staticProperty.GetValue(_this);
@@ -228,5 +233,15 @@ internal static class ExpressionExtensions
         {
             return ((FieldInfo)expression.Member).GetValue(_this);
         }
+    }
+
+    private static bool IsInstanceMember(this MemberInfo memberInfo)
+    {
+        return memberInfo switch
+        {
+            FieldInfo fieldInfo => !fieldInfo.IsStatic,
+            PropertyInfo propertyInfo => !(propertyInfo.GetMethod ?? propertyInfo.SetMethod)!.IsStatic,
+            _ => false
+        };
     }
 }

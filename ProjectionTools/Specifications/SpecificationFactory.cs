@@ -44,7 +44,7 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
         Defensive.Contract.ArgumentNotNull(delegateFactory);
 
         _lazyExpressionFactory = expressionFactory == null
-            ? new Lazy<Func<TParam, Expression<Func<TSource, bool>>>>(() => x => (Expression<Func<TSource, bool>>)delegateFactory(x).Decompile(), LazyThreadSafetyMode.None)
+            ? new Lazy<Func<TParam, Expression<Func<TSource, bool>>>>(() => x => (Expression<Func<TSource, bool>>)delegateFactory(x).Decompile(), LazyThreadSafetyMode.PublicationOnly)
             : new Lazy<Func<TParam, Expression<Func<TSource, bool>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
         _lazyDelegateFactory = new Lazy<Func<TParam, Func<TSource, bool>>>(() => delegateFactory, LazyThreadSafetyMode.PublicationOnly);
@@ -91,7 +91,7 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
 
         // todo: not consistent behavior expression vs delegate when factories contain IIF
         return new Specification<TSource>(
-            new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(value).BindArgument(arg, lazyExpressionFactory.Value.Method.GetParameters()[0])),
+            new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(value).BindArgument(arg, lazyExpressionFactory.Value.Method.GetParameters()[0]), LazyThreadSafetyMode.PublicationOnly),
             new Lazy<Func<TSource, bool>>(() => throw new NotSupportedException($"Parameter expression: {arg}"), LazyThreadSafetyMode.PublicationOnly)
         );
     }

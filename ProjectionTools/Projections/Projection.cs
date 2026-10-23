@@ -41,7 +41,7 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
 
         _lazyExpression = new Lazy<Expression<Func<TSource, TResult>>>(() => projectionExpression.Rewrite(), LazyThreadSafetyMode.PublicationOnly);
 
-        _lazyDelegate = new Lazy<Func<TSource, TResult>>(() => projectionExpression.Rewrite().Compile(), LazyThreadSafetyMode.PublicationOnly);
+        _lazyDelegate = new Lazy<Func<TSource, TResult>>(() => _lazyExpression.Value.Compile(), LazyThreadSafetyMode.PublicationOnly);
     }
 
     /// <summary>
