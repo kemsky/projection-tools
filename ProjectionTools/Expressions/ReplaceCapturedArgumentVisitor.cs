@@ -10,6 +10,11 @@ internal sealed class ReplaceCapturedArgumentVisitor : ExpressionVisitor
 
     private readonly Expression _replacement;
 
+    /// <summary>
+    /// True when at least one captured argument was replaced.
+    /// </summary>
+    public bool Replaced { get; private set; }
+
     public ReplaceCapturedArgumentVisitor(ParameterInfo parameter, Expression replacement)
     {
         _parameter = parameter;
@@ -28,6 +33,8 @@ internal sealed class ReplaceCapturedArgumentVisitor : ExpressionVisitor
             // memberInfo has DeclaringType compiler generated
             if (memberExpression.Expression is ConstantExpression && memberExpression.Member.DeclaringType?.GetCustomAttribute<CompilerGeneratedAttribute>(inherit: false) != null)
             {
+                Replaced = true;
+
                 return _replacement;
             }
         }

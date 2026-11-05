@@ -81,13 +81,11 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     {
         Defensive.Contract.ArgumentNotNull(sourceExpression);
 
-        var delegateLocal = Project;
-        var expressionLocal = ProjectExpression;
-
         return new Projection<TProjection, TResult>(
-            new Lazy<Expression<Func<TProjection, TResult>>>(() => expressionLocal.ApplyTo(sourceExpression), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Expression<Func<TProjection, TResult>>>(() => _lazyExpression.Value.ApplyTo(sourceExpression.Rewrite()), LazyThreadSafetyMode.PublicationOnly),
             new Lazy<Func<TProjection, TResult>>(() =>
             {
+                var delegateLocal = _lazyDelegate.Value;
                 var sourceDelegate = sourceExpression.Compile();
 
                 return source => delegateLocal(sourceDelegate(source));
@@ -106,14 +104,16 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     {
         Defensive.Contract.ArgumentNotNull(sourceDelegate);
 
-        var delegateLocal = Project;
-        var expressionLocal = ProjectExpression;
-
         var lazyExpression = sourceExpression == null
-            ? new Lazy<Expression<Func<TProjection, TResult>>>(() => expressionLocal.ApplyTo((Expression<Func<TProjection, TSource>>)sourceDelegate.Decompile()), LazyThreadSafetyMode.PublicationOnly)
-            : new Lazy<Expression<Func<TProjection, TResult>>>(() => expressionLocal.ApplyTo(sourceExpression), LazyThreadSafetyMode.PublicationOnly);
+            ? new Lazy<Expression<Func<TProjection, TResult>>>(() => _lazyExpression.Value.ApplyTo(((Expression<Func<TProjection, TSource>>)sourceDelegate.Decompile()).Rewrite()), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Expression<Func<TProjection, TResult>>>(() => _lazyExpression.Value.ApplyTo(sourceExpression.Rewrite()), LazyThreadSafetyMode.PublicationOnly);
 
-        var lazyDelegate = new Lazy<Func<TProjection, TResult>>(() => source => delegateLocal(sourceDelegate(source)), LazyThreadSafetyMode.PublicationOnly);
+        var lazyDelegate = new Lazy<Func<TProjection, TResult>>(() =>
+        {
+            var delegateLocal = _lazyDelegate.Value;
+
+            return source => delegateLocal(sourceDelegate(source));
+        }, LazyThreadSafetyMode.PublicationOnly);
 
         return new Projection<TProjection, TResult>(
             lazyExpression,
@@ -131,12 +131,15 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     {
         Defensive.Contract.ArgumentNotNull(sourceProjection);
 
-        var delegateLocal = Project;
-        var expressionLocal = ProjectExpression;
-
         return new Projection<TProjection, TResult>(
-            new Lazy<Expression<Func<TProjection, TResult>>>(() => expressionLocal.ApplyTo(sourceProjection.ProjectExpression), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TProjection, TResult>>(() => source => delegateLocal(sourceProjection.Project(source)), LazyThreadSafetyMode.PublicationOnly)
+            new Lazy<Expression<Func<TProjection, TResult>>>(() => _lazyExpression.Value.ApplyTo(sourceProjection.ProjectExpression), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Func<TProjection, TResult>>(() =>
+            {
+                var delegateLocal = _lazyDelegate.Value;
+                var sourceDelegate = sourceProjection.Project;
+
+                return source => delegateLocal(sourceDelegate(source));
+            }, LazyThreadSafetyMode.PublicationOnly)
         );
     }
 
@@ -150,13 +153,11 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     {
         Defensive.Contract.ArgumentNotNull(projectionExpression);
 
-        var delegateLocal = Project;
-        var expressionLocal = ProjectExpression;
-
         return new Projection<TSource, TProjection>(
-            new Lazy<Expression<Func<TSource, TProjection>>>(() => expressionLocal.ProjectTo(projectionExpression), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Expression<Func<TSource, TProjection>>>(() => _lazyExpression.Value.ProjectTo(projectionExpression.Rewrite()), LazyThreadSafetyMode.PublicationOnly),
             new Lazy<Func<TSource, TProjection>>(() =>
             {
+                var delegateLocal = _lazyDelegate.Value;
                 var projectionDelegate = projectionExpression.Compile();
 
                 return source => projectionDelegate(delegateLocal(source));
@@ -175,14 +176,16 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     {
         Defensive.Contract.ArgumentNotNull(projectionDelegate);
 
-        var delegateLocal = Project;
-        var expressionLocal = ProjectExpression;
-
         var lazyExpression = projectionExpression == null
-            ? new Lazy<Expression<Func<TSource, TProjection>>>(() => expressionLocal.ProjectTo((Expression<Func<TResult, TProjection>>)projectionDelegate.Decompile()), LazyThreadSafetyMode.PublicationOnly)
-            : new Lazy<Expression<Func<TSource, TProjection>>>(() => expressionLocal.ProjectTo(projectionExpression), LazyThreadSafetyMode.PublicationOnly);
+            ? new Lazy<Expression<Func<TSource, TProjection>>>(() => _lazyExpression.Value.ProjectTo(((Expression<Func<TResult, TProjection>>)projectionDelegate.Decompile()).Rewrite()), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Expression<Func<TSource, TProjection>>>(() => _lazyExpression.Value.ProjectTo(projectionExpression.Rewrite()), LazyThreadSafetyMode.PublicationOnly);
 
-        var lazyDelegate = new Lazy<Func<TSource, TProjection>>(() => source => projectionDelegate(delegateLocal(source)), LazyThreadSafetyMode.PublicationOnly);
+        var lazyDelegate = new Lazy<Func<TSource, TProjection>>(() =>
+        {
+            var delegateLocal = _lazyDelegate.Value;
+
+            return source => projectionDelegate(delegateLocal(source));
+        }, LazyThreadSafetyMode.PublicationOnly);
 
         return new Projection<TSource, TProjection>(
             lazyExpression,
@@ -200,12 +203,15 @@ public sealed class Projection<TSource, TResult> : IProjectionExpressionAccessor
     {
         Defensive.Contract.ArgumentNotNull(projection);
 
-        var delegateLocal = Project;
-        var expressionLocal = ProjectExpression;
-
         return new Projection<TSource, TProjection>(
-            new Lazy<Expression<Func<TSource, TProjection>>>(() => expressionLocal.ProjectTo(projection.ProjectExpression), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TSource, TProjection>>(() => source => projection.Project(delegateLocal(source)), LazyThreadSafetyMode.PublicationOnly)
+            new Lazy<Expression<Func<TSource, TProjection>>>(() => _lazyExpression.Value.ProjectTo(projection.ProjectExpression), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Func<TSource, TProjection>>(() =>
+            {
+                var delegateLocal = _lazyDelegate.Value;
+                var projectionDelegate = projection.Project;
+
+                return source => projectionDelegate(delegateLocal(source));
+            }, LazyThreadSafetyMode.PublicationOnly)
         );
     }
 

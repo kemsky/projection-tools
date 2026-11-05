@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AgileObjects.ReadableExpressions;
 using NUnit.Framework;
+using ProjectionTools.Projections;
 using ProjectionTools.Specifications;
 
 namespace ProjectionTools.Tests.Specification;
@@ -135,11 +136,76 @@ public class SpecificationTest
         Assert.That(result, Is.True);
     }
 
+    [Test]
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void Specification_ApplyTo_nested_projection__Expression(bool createFromExpression, bool applyToExpression, bool decompile)
+    {
+        var specification = Create<string>(
+            createFromExpression,
+            x => x == "A",
+            x => x == "A",
+            decompile
+        );
+
+        var nameProjection = new Projection<ProjectedClass, string>(x => x.Name);
+
+        var specification1 = ApplyTo<string, ProjectedClass>(
+            applyToExpression,
+            specification,
+            x => nameProjection.Project(x),
+            x => nameProjection.Project(x),
+            decompile
+        );
+
+        var result = specification1.IsSatisfiedByExpression;
+
+        Assert.That(result.ToReadableString(), Is.EqualTo("x => x.Name == \"A\""));
+    }
+
+    [Test]
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void Specification_ApplyTo_nested_projection__Delegate(bool createFromExpression, bool applyToExpression, bool decompile)
+    {
+        var specification = Create<string>(
+            createFromExpression,
+            x => x == "A",
+            x => x == "A",
+            decompile
+        );
+
+        var nameProjection = new Projection<ProjectedClass, string>(x => x.Name);
+
+        var specification1 = ApplyTo<string, ProjectedClass>(
+            applyToExpression,
+            specification,
+            x => nameProjection.Project(x),
+            x => nameProjection.Project(x),
+            decompile
+        );
+
+        var result = specification1.IsSatisfiedBy(new ProjectedClass("A"));
+
+        Assert.That(result, Is.True);
+    }
+
     private Specification<TProjection> ApplyTo<TSource, TProjection>(
         bool applyToExpression,
         Specification<TSource> spec,
         Expression<Func<TProjection, TSource>> expression,
-        Func<TProjection, TSource> func
+        Func<TProjection, TSource> func,
+        bool decompile = false
     )
     {
         if (applyToExpression)
@@ -148,7 +214,7 @@ public class SpecificationTest
         }
         else
         {
-            return spec.ApplyTo(expression, func);
+            return spec.ApplyTo(decompile ? null : expression, func);
         }
     }
 
@@ -451,7 +517,8 @@ public class SpecificationTest
     private Specification<TSource> Create<TSource>(
         bool createFromExpression,
         Expression<Func<TSource, bool>> expressionFunc,
-        Func<TSource, bool> delegateFunc
+        Func<TSource, bool> delegateFunc,
+        bool decompile = false
     )
     {
         if (createFromExpression)
@@ -460,7 +527,7 @@ public class SpecificationTest
         }
         else
         {
-            return new Specification<TSource>(expressionFunc, delegateFunc);
+            return new Specification<TSource>(decompile ? null : expressionFunc, delegateFunc);
         }
     }
 

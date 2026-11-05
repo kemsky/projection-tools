@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using DelegateDecompiler;
 using ProjectionTools.Assertions;
 using ProjectionTools.Expressions;
+using ProjectionTools.Projections;
 
 namespace ProjectionTools.Specifications;
 
@@ -144,13 +145,11 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
     {
         Defensive.Contract.ArgumentNotNull(expression);
 
-        var currentDelegate = IsSatisfiedBy;
-        var currentExpression = IsSatisfiedByExpression;
-
         return new Specification<TProjection>(
-            new Lazy<Expression<Func<TProjection, bool>>>(() => currentExpression.ApplyTo(expression), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Expression<Func<TProjection, bool>>>(() => _lazyExpression.Value.ApplyTo(expression.Rewrite()), LazyThreadSafetyMode.PublicationOnly),
             new Lazy<Func<TProjection, bool>>(() =>
             {
+                var currentDelegate = _lazyDelegate.Value;
                 var compiled = expression.Compile();
 
                 return x => currentDelegate(compiled.Invoke(x));
@@ -169,14 +168,16 @@ public sealed class Specification<TSource> : ISpecificationExpressionAccessor, I
     {
         Defensive.Contract.ArgumentNotNull(delegateFunc);
 
-        var currentDelegate = IsSatisfiedBy;
-        var currentExpression = IsSatisfiedByExpression;
-
         var lazyExpression = expressionFunc == null
-            ? new Lazy<Expression<Func<TProjection, bool>>>(() => currentExpression.ApplyTo((Expression<Func<TProjection, TSource>>)delegateFunc.Decompile()), LazyThreadSafetyMode.PublicationOnly)
-            : new Lazy<Expression<Func<TProjection, bool>>>(() => currentExpression.ApplyTo(expressionFunc), LazyThreadSafetyMode.PublicationOnly);
+            ? new Lazy<Expression<Func<TProjection, bool>>>(() => _lazyExpression.Value.ApplyTo(((Expression<Func<TProjection, TSource>>)delegateFunc.Decompile()).Rewrite()), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Expression<Func<TProjection, bool>>>(() => _lazyExpression.Value.ApplyTo(expressionFunc.Rewrite()), LazyThreadSafetyMode.PublicationOnly);
 
-        var lazyDelegate = new Lazy<Func<TProjection, bool>>(() => x => currentDelegate(delegateFunc(x)), LazyThreadSafetyMode.PublicationOnly);
+        var lazyDelegate = new Lazy<Func<TProjection, bool>>(() =>
+        {
+            var currentDelegate = _lazyDelegate.Value;
+
+            return x => currentDelegate(delegateFunc(x));
+        }, LazyThreadSafetyMode.PublicationOnly);
 
         return new Specification<TProjection>(
             lazyExpression,

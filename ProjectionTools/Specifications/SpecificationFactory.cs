@@ -21,6 +21,9 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
 
     private readonly Lazy<Func<TParam, Func<TSource, bool>>> _lazyDelegateFactory;
 
+    // true when delegates are compiled from expressions (no delegate factory was provided)
+    private readonly bool _compileDelegate;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SpecificationFactory{TSource, TParam}"/> class with an expression factory.
     /// </summary>
@@ -32,6 +35,8 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
         _lazyExpressionFactory = new Lazy<Func<TParam, Expression<Func<TSource, bool>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
         _lazyDelegateFactory = new Lazy<Func<TParam, Func<TSource, bool>>>(() => x => expressionFactory(x).Compile(), LazyThreadSafetyMode.PublicationOnly);
+
+        _compileDelegate = true;
     }
 
     /// <summary>
@@ -50,7 +55,7 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
         _lazyDelegateFactory = new Lazy<Func<TParam, Func<TSource, bool>>>(() => delegateFactory, LazyThreadSafetyMode.PublicationOnly);
     }
 
-    internal SpecificationFactory(Lazy<Func<TParam, Expression<Func<TSource, bool>>>> expressionFactory, Lazy<Func<TParam, Func<TSource, bool>>> delegateFactory)
+    internal SpecificationFactory(Lazy<Func<TParam, Expression<Func<TSource, bool>>>> expressionFactory, Lazy<Func<TParam, Func<TSource, bool>>> delegateFactory, bool compileDelegate)
     {
         Defensive.Contract.ArgumentNotNull(expressionFactory);
         Defensive.Contract.ArgumentNotNull(delegateFactory);
@@ -58,6 +63,8 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
         _lazyExpressionFactory = expressionFactory;
 
         _lazyDelegateFactory = delegateFactory;
+
+        _compileDelegate = compileDelegate;
     }
 
     /// <summary>
@@ -72,10 +79,13 @@ public sealed class SpecificationFactory<TSource, TParam> : ISpecificationFactor
         var lazyExpressionFactory = _lazyExpressionFactory;
         var lazyDelegateFactory = _lazyDelegateFactory;
 
-        return new(
-            new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(param), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TSource, bool>>(() => lazyDelegateFactory.Value(param), LazyThreadSafetyMode.PublicationOnly)
-        );
+        var lazyExpression = new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(param).Rewrite(), LazyThreadSafetyMode.PublicationOnly);
+
+        var lazyDelegate = _compileDelegate
+            ? new Lazy<Func<TSource, bool>>(() => lazyExpression.Value.Compile(), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Func<TSource, bool>>(() => lazyDelegateFactory.Value(param), LazyThreadSafetyMode.PublicationOnly);
+
+        return new(lazyExpression, lazyDelegate);
     }
 
     ISpecificationInternal ISpecificationFactoryInternal.For(object? arg)

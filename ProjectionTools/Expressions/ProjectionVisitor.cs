@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using ProjectionTools.Assertions;
 using ProjectionTools.Projections;
@@ -8,12 +9,38 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
 {
     protected override Expression VisitInvocation(InvocationExpression node)
     {
-        // replace Delegate call with projection expression body
+        if (TryInlineProject(node.Expression, node.Arguments, out var expression))
+        {
+            return expression;
+        }
+
+        return base.VisitInvocation(node);
+    }
+
+    protected override Expression VisitMethodCall(MethodCallExpression node)
+    {
+        if (node.Method.HasName(nameof(Func<object, object>.Invoke)) && TryInlineProject(node.Object, node.Arguments, out var expression))
+        {
+            return expression;
+        }
+
+        // do not rewrite projection instances passed as arguments, e.g. Helper(projection, x)
+        if (node.Method.GetParameters().Any(x => x.ParameterType.IsProjectionType()))
+        {
+            return node.Update(Visit(node.Object), this.VisitArguments(node, x => x.IsProjectionType()));
+        }
+
+        return base.VisitMethodCall(node);
+    }
+
+    private bool TryInlineProject(Expression? target, IReadOnlyList<Expression> arguments, [NotNullWhen(true)] out Expression? expression)
+    {
         if (
-            node.Expression is MemberExpression memberExpression
+            arguments.Count == 1
+            && target is MemberExpression memberExpression
             && memberExpression.Expression != null
             && memberExpression.Member.IsProjectionMember()
-            && string.Equals(memberExpression.Member.Name, nameof(Projection<object, object>.Project), StringComparison.Ordinal)
+            && memberExpression.Member.HasName(nameof(Projection<object, object>.Project))
             && memberExpression.Expression.TryEvaluate(out var memberValue)
         )
         {
@@ -23,16 +50,16 @@ internal sealed class ProjectionVisitor : ExpressionVisitor
 
             var lambda = projection.GetExpression();
 
-            var body = lambda.Body;
+            var visitor = new ReplaceParameterVisitor(lambda.Parameters[0], arguments[0]);
 
-            var visitor = new ReplaceParameterVisitor(lambda.Parameters[0], node.Arguments[0]);
+            expression = Visit(visitor.Visit(lambda.Body));
 
-            var expression = visitor.Visit(body);
-
-            return Visit(expression);
+            return true;
         }
 
-        return base.VisitInvocation(node);
+        expression = null;
+
+        return false;
     }
 
     protected override Expression VisitMember(MemberExpression memberExpression)

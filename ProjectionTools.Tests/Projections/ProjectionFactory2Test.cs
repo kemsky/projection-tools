@@ -91,6 +91,58 @@ public class ProjectionFactory2Test
         Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("C"));
     }
 
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__BoundParam__Changed(bool createFromExpression)
+    {
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (param1, param2) => y => y.Name == param1 ? "C" : y.Name == param2 ? "D" : "B",
+            (param1, param2) => y => y.Name == param1 ? "C" : y.Name == param2 ? "D" : "B"
+        );
+
+        var a = "A";
+        var b = "B";
+
+        var projection = projectionFactory.For(() => a, () => b);
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("C"));
+
+        a = "B";
+        b = "A";
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__BoundParam__CompiledOnce(bool createFromExpression)
+    {
+        var expressionFactoryCalls = 0;
+
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (param1, param2) =>
+            {
+                expressionFactoryCalls++;
+
+                return y => y.Name == param1 ? "C" : y.Name == param2 ? "D" : "B";
+            },
+            (param1, param2) => y => y.Name == param1 ? "C" : y.Name == param2 ? "D" : "B"
+        );
+
+        var projection = projectionFactory.For(() => A, () => B);
+
+        for (var i = 0; i < 10; i++)
+        {
+            projection.Project(new ProjectedClass("A"));
+        }
+
+        Assert.That(expressionFactoryCalls, Is.LessThanOrEqualTo(1));
+    }
+
     #endregion
 
     #region ForPartial
@@ -128,6 +180,158 @@ public class ProjectionFactory2Test
         var projectionFactory1 = projectionFactory.For(() => D);
 
         var projection = projectionFactory1.For(() => A);
+
+        Assert.That(projection.ProjectExpression.ToReadableString(), Is.EqualTo("y => (y.Name == D) ? \"C\" : (y.Name == A) ? \"D\" : \"B\""));
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));
+    }
+
+    // parameter names intentionally differ from the names used by library wrapper lambdas (param1, param2)
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__Param__Partial__BoundParam(bool createFromExpression)
+    {
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B",
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B"
+        );
+
+        var projection = projectionFactory.For("D").For(() => A);
+
+        Assert.That(projection.ProjectExpression.ToReadableString(), Is.EqualTo("y => (y.Name == a) ? \"C\" : (y.Name == A) ? \"D\" : \"B\""));
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__BoundParam__Partial__BoundParam(bool createFromExpression)
+    {
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B",
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B"
+        );
+
+        var projection = projectionFactory.For(() => D).For(() => A);
+
+        Assert.That(projection.ProjectExpression.ToReadableString(), Is.EqualTo("y => (y.Name == D) ? \"C\" : (y.Name == A) ? \"D\" : \"B\""));
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__Param__Partial__BoundParam__Changed(bool createFromExpression)
+    {
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B",
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B"
+        );
+
+        var param2 = "A";
+
+        var projection = projectionFactory.For("D").For(() => param2);
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));
+
+        param2 = "B";
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("B"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__BoundParam__Partial__BoundParam__Changed(bool createFromExpression)
+    {
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B",
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B"
+        );
+
+        var param1 = "D";
+        var param2 = "A";
+
+        var projection = projectionFactory.For(() => param1).For(() => param2);
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));
+
+        param1 = "A";
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("C"));
+
+        param1 = "D";
+        param2 = "B";
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("B"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__Param__Partial__BoundParam__CompiledOnce(bool createFromExpression)
+    {
+        var expressionFactoryCalls = 0;
+
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (a, b) =>
+            {
+                expressionFactoryCalls++;
+
+                return y => y.Name == a ? "C" : y.Name == b ? "D" : "B";
+            },
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B"
+        );
+
+        var projection = projectionFactory.For("D").For(() => A);
+
+        for (var i = 0; i < 10; i++)
+        {
+            projection.Project(new ProjectedClass("A"));
+        }
+
+        Assert.That(expressionFactoryCalls, Is.LessThanOrEqualTo(1));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__BoundParam__Partial__BoundParam__CompiledOnce(bool createFromExpression)
+    {
+        var expressionFactoryCalls = 0;
+
+        var projectionFactory = Create<ProjectedClass, string, string, string>(
+            createFromExpression,
+            (a, b) =>
+            {
+                expressionFactoryCalls++;
+
+                return y => y.Name == a ? "C" : y.Name == b ? "D" : "B";
+            },
+            (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B"
+        );
+
+        var projection = projectionFactory.For(() => D).For(() => A);
+
+        for (var i = 0; i < 10; i++)
+        {
+            projection.Project(new ProjectedClass("A"));
+        }
+
+        Assert.That(expressionFactoryCalls, Is.LessThanOrEqualTo(1));
+    }
+
+    [Test]
+    public void ProjectionFactory__BoundParams__Decompiled()
+    {
+        var projectionFactory = new ProjectionFactory<ProjectedClass, string, string, string>(null, (a, b) => y => y.Name == a ? "C" : y.Name == b ? "D" : "B");
+
+        var projection = projectionFactory.For(() => D, () => A);
 
         Assert.That(projection.ProjectExpression.ToReadableString(), Is.EqualTo("y => (y.Name == D) ? \"C\" : (y.Name == A) ? \"D\" : \"B\""));
         Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("D"));

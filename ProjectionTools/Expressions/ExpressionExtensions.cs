@@ -147,9 +147,7 @@ internal static class ExpressionExtensions
         ParameterInfo parameterInfo
     ) where TExpression : Expression
     {
-        var parameterBody = argumentExpression.Body;
-
-        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody).Visit(expression);
+        return expression.BindArgumentStrict(argumentExpression.Body, parameterInfo);
     }
 
     public static TExpression BindArguments<TExpression, TArg1, TArg2>(
@@ -160,10 +158,9 @@ internal static class ExpressionExtensions
         ParameterInfo parameterInfo2
     ) where TExpression : Expression
     {
-        var argument1Body = argument1Expression.Body;
-        var argument2Body = argument2Expression.Body;
-
-        return (TExpression)new ReplaceCapturedArgumentVisitor(parameterInfo2, argument2Body).Visit(new ReplaceCapturedArgumentVisitor(parameterInfo1, argument1Body).Visit(expression));
+        return expression
+            .BindArgumentStrict(argument1Expression.Body, parameterInfo1)
+            .BindArgumentStrict(argument2Expression.Body, parameterInfo2);
     }
 
     public static bool HasName([NotNullWhen(true)] this MemberInfo? methodInfo, string name)
@@ -205,6 +202,24 @@ internal static class ExpressionExtensions
         return type.IsProjectionType();
     }
 
+    /// <summary>
+    /// Visits method call arguments, leaving arguments for parameters matching <paramref name="skipParameterType"/> as is.
+    /// </summary>
+    public static Expression[] VisitArguments(this ExpressionVisitor visitor, MethodCallExpression node, Func<Type, bool> skipParameterType)
+    {
+        var parameters = node.Method.GetParameters();
+
+        var arguments = new Expression[node.Arguments.Count];
+
+        for (var i = 0; i < arguments.Length; i++)
+        {
+            // when a params parameter is invoked in expanded form, trailing arguments have no matching ParameterInfo, so they are visited as is
+            arguments[i] = i < parameters.Length && skipParameterType(parameters[i].ParameterType) ? node.Arguments[i] : visitor.Visit(node.Arguments[i]);
+        }
+
+        return arguments;
+    }
+
     private static Expression<Func<T, bool>> Compose<T>(
         this Expression<Func<T, bool>> predicate1,
         Expression<Func<T, bool>> predicate2,
@@ -243,5 +258,14 @@ internal static class ExpressionExtensions
             PropertyInfo propertyInfo => !(propertyInfo.GetMethod ?? propertyInfo.SetMethod)!.IsStatic,
             _ => false
         };
+    }
+
+    private static TExpression BindArgumentStrict<TExpression>(this TExpression expression, Expression parameterBody, ParameterInfo parameterInfo) where TExpression : Expression
+    {
+        var visitor = new ReplaceCapturedArgumentVisitor(parameterInfo, parameterBody);
+
+        // no validation for now
+
+        return (TExpression)visitor.Visit(expression);
     }
 }

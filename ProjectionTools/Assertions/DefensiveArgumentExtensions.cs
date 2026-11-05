@@ -10,7 +10,7 @@ internal static class DefensiveArgumentExtensions
     {
         if (!(value is object))
         {
-            defensive.Throw($"Argument \"{argumentName}\" must be not null");
+            throw new ArgumentNullException(argumentName);
         }
     }
 }

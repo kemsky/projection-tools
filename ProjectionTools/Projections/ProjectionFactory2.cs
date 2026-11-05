@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using DelegateDecompiler;
 using ProjectionTools.Assertions;
 using ProjectionTools.Expressions;
@@ -23,6 +24,15 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
 
     private readonly Lazy<Func<TParam1, TParam2, Func<TSource, TResult>>> _lazyDelegate;
 
+    // used to bind captured arguments in For(Func<...>)
+    private readonly ParameterInfo _parameter1;
+
+    // used to bind captured arguments in For(Func<...>)
+    private readonly ParameterInfo _parameter2;
+
+    // true when delegates are compiled from expressions (no delegate factory was provided)
+    private readonly bool _compileDelegate;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ProjectionFactory{TSource, TResult, TParam1, TParam2}"/> class with an expression factory.
     /// </summary>
@@ -34,6 +44,13 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
         _lazyExpression = new Lazy<Func<TParam1, TParam2, Expression<Func<TSource, TResult>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
         _lazyDelegate = new Lazy<Func<TParam1, TParam2, Func<TSource, TResult>>>(() => (x, y) => expressionFactory(x, y).Compile(), LazyThreadSafetyMode.PublicationOnly);
+
+        var parameters = expressionFactory.Method.GetParameters();
+
+        _parameter1 = parameters[0];
+        _parameter2 = parameters[1];
+
+        _compileDelegate = true;
     }
 
     /// <summary>
@@ -50,11 +67,20 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
             : new Lazy<Func<TParam1, TParam2, Expression<Func<TSource, TResult>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
         _lazyDelegate = new Lazy<Func<TParam1, TParam2, Func<TSource, TResult>>>(() => delegateFactory, LazyThreadSafetyMode.PublicationOnly);
+
+
+        var parameters = ((Delegate?)expressionFactory ?? delegateFactory).Method.GetParameters();
+
+        _parameter1 = parameters[0];
+        _parameter2 = parameters[1];
     }
 
     /// <summary>
     /// Partially applies the factory by providing the first parameter, returning a new factory that only requires the second parameter.
     /// </summary>
+    /// <remarks>
+    /// Calling this method inside an expression is not supported. Call it outside the expression and use the result inside it.
+    /// </remarks>
     /// <param name="param1">The first parameter to apply.</param>
     /// <returns>A new <see cref="ProjectionFactory{TSource, TResult, TParam2}"/> that takes the remaining parameter.</returns>
     public ProjectionFactory<TSource, TResult, TParam2> For(TParam1 param1)
@@ -62,18 +88,35 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
         var expressionFactory = ExpressionFactory;
         var delegateFactory = DelegateFactory;
 
-        return new(param2 => expressionFactory(param1, param2), param2 => delegateFactory(param1, param2));
+        return new(
+            new Lazy<Func<TParam2, Expression<Func<TSource, TResult>>>>(() => param2 => expressionFactory(param1, param2), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Func<TParam2, Func<TSource, TResult>>>(() => param2 => delegateFactory(param1, param2), LazyThreadSafetyMode.PublicationOnly),
+            _parameter2,
+            _compileDelegate
+        );
     }
 
     /// <summary>
     /// Creates a <see cref="Projection{TSource, TResult}"/> instance by providing both parameters to the factory.
     /// </summary>
+    /// <remarks>
+    /// Calling this method inside an expression is not supported. Call it outside the expression and use the result inside it.
+    /// </remarks>
     /// <param name="param1">The first parameter to be used by the projection factories.</param>
     /// <param name="param2">The second parameter to be used by the projection factories.</param>
     /// <returns>A new <see cref="Projection{TSource, TResult}"/>.</returns>
     public Projection<TSource, TResult> For(TParam1 param1, TParam2 param2)
     {
-        return new(ExpressionFactory(param1, param2), DelegateFactory(param1, param2));
+        var lazyExpressionFactory = _lazyExpression;
+        var lazyDelegateFactory = _lazyDelegate;
+
+        var lazyExpression = new Lazy<Expression<Func<TSource, TResult>>>(() => lazyExpressionFactory.Value(param1, param2).Rewrite(), LazyThreadSafetyMode.PublicationOnly);
+
+        var lazyDelegate = _compileDelegate
+            ? new Lazy<Func<TSource, TResult>>(() => lazyExpression.Value.Compile(), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Func<TSource, TResult>>(() => lazyDelegateFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly);
+
+        return new(lazyExpression, lazyDelegate);
     }
 
     /// <summary>
@@ -82,6 +125,9 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
     /// <br/>
     /// <b>Warning:</b> This may lead to inconsistent behavior between the expression and delegate forms if the factories contain conditional logic (e.g., `?:`).
     /// </summary>
+    /// <remarks>
+    /// Calling this method inside an expression is not supported. Call it outside the expression and use the result inside it.
+    /// </remarks>
     /// <param name="param1">A delegate that provides the first parameter for the projection factories.</param>
     /// <param name="param2">A delegate that provides the second parameter for the projection factories.</param>
     /// <returns>A new <see cref="Projection{TSource, TResult}"/>.</returns>
@@ -89,12 +135,18 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
     {
         var expressionFactory = ExpressionFactory;
         var delegateFactory = DelegateFactory;
+        var parameter1 = _parameter1;
+        var parameter2 = _parameter2;
 
         // todo: not consistent behavior expression vs delegate when factories contain IIF
-        return new(
-            new Lazy<Expression<Func<TSource, TResult>>>(() => expressionFactory(param1(), param2()).BindArguments((Expression<Func<TParam1>>)param1.Decompile(), (Expression<Func<TParam2>>)param2.Decompile(), expressionFactory.Method.GetParameters()[0], expressionFactory.Method.GetParameters()[1]), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TSource, TResult>>(() => source => delegateFactory(param1(), param2())(source), LazyThreadSafetyMode.PublicationOnly)
-        );
+        var lazyExpression = new Lazy<Expression<Func<TSource, TResult>>>(() => expressionFactory(param1(), param2()).BindArguments((Expression<Func<TParam1>>)param1.Decompile(), (Expression<Func<TParam2>>)param2.Decompile(), parameter1, parameter2).Rewrite(), LazyThreadSafetyMode.PublicationOnly);
+
+        // bound expression evaluates param1() and param2() on each call, so it is compiled only once
+        var lazyDelegate = _compileDelegate
+            ? new Lazy<Func<TSource, TResult>>(() => lazyExpression.Value.Compile(), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Func<TSource, TResult>>(() => source => delegateFactory(param1(), param2())(source), LazyThreadSafetyMode.PublicationOnly);
+
+        return new(lazyExpression, lazyDelegate);
     }
 
     /// <summary>
@@ -103,17 +155,23 @@ public sealed class ProjectionFactory<TSource, TResult, TParam1, TParam2>
     /// <br/>
     /// <b>Warning:</b> This may lead to inconsistent behavior between the expression and delegate forms if the factories contain conditional logic (e.g., `?:`).
     /// </summary>
+    /// <remarks>
+    /// Calling this method inside an expression is not supported. Call it outside the expression and use the result inside it.
+    /// </remarks>
     /// <param name="param1">A delegate that provides the first parameter to apply.</param>
     /// <returns>A new <see cref="ProjectionFactory{TSource, TResult, TParam2}"/> that takes the remaining parameter.</returns>
     public ProjectionFactory<TSource, TResult, TParam2> For(Func<TParam1> param1)
     {
         var expressionFactory = ExpressionFactory;
         var delegateFactory = DelegateFactory;
+        var parameter1 = _parameter1;
 
         // todo: not consistent behavior expression vs delegate when factories contain IIF
         return new(
-            new Lazy<Func<TParam2, Expression<Func<TSource, TResult>>>>(() => param2 => expressionFactory(param1(), param2).BindArgument((Expression<Func<TParam1>>)param1.Decompile(), expressionFactory.Method.GetParameters()[0]), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TParam2, Func<TSource, TResult>>>(() => param2 => source => delegateFactory(param1(), param2)(source), LazyThreadSafetyMode.PublicationOnly)
+            new Lazy<Func<TParam2, Expression<Func<TSource, TResult>>>>(() => param2 => expressionFactory(param1(), param2).BindArgument((Expression<Func<TParam1>>)param1.Decompile(), parameter1), LazyThreadSafetyMode.PublicationOnly),
+            new Lazy<Func<TParam2, Func<TSource, TResult>>>(() => param2 => source => delegateFactory(param1(), param2)(source), LazyThreadSafetyMode.PublicationOnly),
+            _parameter2,
+            _compileDelegate
         );
     }
 }

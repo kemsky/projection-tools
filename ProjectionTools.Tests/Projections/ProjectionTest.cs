@@ -178,11 +178,82 @@ public class ProjectionTest
         Assert.That(result.Project(new ProjectedClassContainer(new ProjectedClass("A"))), Is.EqualTo("A"));
     }
 
+    [Test]
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void ApplyTo_nested_projection__Expression(bool createFromExpression, bool applyToExpression, bool decompile)
+    {
+        var projection = Create<ProjectedClass, string>(
+            createFromExpression,
+            x => x.Name == "A" ? x.Name : "B",
+            x => x.Name == "A" ? x.Name : "B",
+            decompile
+        );
+
+        var nestedProjection = Create<ProjectedClassContainer, ProjectedClass>(
+            createFromExpression,
+            x => x.ProjectedClass,
+            x => x.ProjectedClass,
+            decompile
+        );
+
+        var result = ApplyTo<ProjectedClass, string, ProjectedClassContainer>(
+            applyToExpression,
+            projection,
+            x => nestedProjection.Project(x),
+            x => nestedProjection.Project(x),
+            decompile
+        );
+
+        Assert.That(result.ProjectExpression.ToString(), Is.EqualTo("x => IIF((x.ProjectedClass.Name == \"A\"), x.ProjectedClass.Name, \"B\")"));
+    }
+
+    [Test]
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void ApplyTo_nested_projection__Delegate(bool createFromExpression, bool applyToExpression, bool decompile)
+    {
+        var projection = Create<ProjectedClass, string>(
+            createFromExpression,
+            x => x.Name == "A" ? x.Name : "B",
+            x => x.Name == "A" ? x.Name : "B",
+            decompile
+        );
+
+        var nestedProjection = Create<ProjectedClassContainer, ProjectedClass>(
+            createFromExpression,
+            x => x.ProjectedClass,
+            x => x.ProjectedClass,
+            decompile
+        );
+
+        var result = ApplyTo<ProjectedClass, string, ProjectedClassContainer>(
+            applyToExpression,
+            projection,
+            x => nestedProjection.Project(x),
+            x => nestedProjection.Project(x),
+            decompile
+        );
+
+        Assert.That(result.Project(new ProjectedClassContainer(new ProjectedClass("A"))), Is.EqualTo("A"));
+    }
+
     private Projection<TProjection, TResult> ApplyTo<TSource, TResult, TProjection>(
         bool applyToExpression,
         Projection<TSource, TResult> projection,
         Expression<Func<TProjection, TSource>> sourceExpression,
-        Func<TProjection, TSource> sourceDelegate
+        Func<TProjection, TSource> sourceDelegate,
+        bool decompile = false
     )
     {
         if (applyToExpression)
@@ -191,7 +262,7 @@ public class ProjectionTest
         }
         else
         {
-            return projection.ApplyTo(sourceExpression, sourceDelegate);
+            return projection.ApplyTo(decompile ? null : sourceExpression, sourceDelegate);
         }
     }
 
@@ -293,11 +364,82 @@ public class ProjectionTest
         Assert.That(result.Project(new ProjectedClass("A")), Is.EqualTo("a"));
     }
 
+    [Test]
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void To_nested_projection__Expression(bool createFromExpression, bool toExpression, bool decompile)
+    {
+        var projection = Create<ProjectedClass, string>(
+            createFromExpression,
+            x => x.Name == "A" ? x.Name : "B",
+            x => x.Name == "A" ? x.Name : "B",
+            decompile
+        );
+
+        var nestedProjection = Create<string, string>(
+            createFromExpression,
+            x => x.ToLower(),
+            x => x.ToLower(),
+            decompile
+        );
+
+        var result = To(
+            toExpression,
+            projection,
+            x => nestedProjection.Project(x),
+            x => nestedProjection.Project(x),
+            decompile
+        );
+
+        Assert.That(result.ProjectExpression.ToString(), Is.EqualTo("x => IIF((x.Name == \"A\"), x.Name, \"B\").ToLower()"));
+    }
+
+    [Test]
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void To_nested_projection__Delegate(bool createFromExpression, bool toExpression, bool decompile)
+    {
+        var projection = Create<ProjectedClass, string>(
+            createFromExpression,
+            x => x.Name == "A" ? x.Name : "B",
+            x => x.Name == "A" ? x.Name : "B",
+            decompile
+        );
+
+        var nestedProjection = Create<string, string>(
+            createFromExpression,
+            x => x.ToLower(),
+            x => x.ToLower(),
+            decompile
+        );
+
+        var result = To(
+            toExpression,
+            projection,
+            x => nestedProjection.Project(x),
+            x => nestedProjection.Project(x),
+            decompile
+        );
+
+        Assert.That(result.Project(new ProjectedClass("A")), Is.EqualTo("a"));
+    }
+
     private Projection<TSource, TProjection> To<TSource, TResult, TProjection>(
         bool applyToExpression,
         Projection<TSource, TResult> projection,
         Expression<Func<TResult, TProjection>> projectionExpression,
-        Func<TResult, TProjection> projectionDelegate
+        Func<TResult, TProjection> projectionDelegate,
+        bool decompile = false
     )
     {
         if (applyToExpression)
@@ -306,7 +448,7 @@ public class ProjectionTest
         }
         else
         {
-            return projection.To(projectionExpression, projectionDelegate);
+            return projection.To(decompile ? null : projectionExpression, projectionDelegate);
         }
     }
 
@@ -315,44 +457,54 @@ public class ProjectionTest
     #region Rewiter
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Projection__Expression__Rewriter(bool createInnerFromExpression, bool createFromExpression)
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void Projection__Expression__Rewriter(bool createInnerFromExpression, bool createFromExpression, bool decompile)
     {
         var lengthPlusOne = Create<string, int>(
             createInnerFromExpression,
             x => x.Length + 1,
-            x => x.Length + 1
+            x => x.Length + 1,
+            decompile
         );
 
         var lengthPlusOnePlusOne = Create<string, int>(
             createFromExpression,
             x => lengthPlusOne.Project(x) + 1,
-            x => lengthPlusOne.Project(x) + 1
+            x => lengthPlusOne.Project(x) + 1,
+            decompile
         );
 
         Assert.That(lengthPlusOnePlusOne.ProjectExpression.ToString(), Is.EqualTo("x => ((x.Length + 1) + 1)"));
     }
 
     [Test]
-    [TestCase(true, true)]
-    [TestCase(true, false)]
-    [TestCase(false, true)]
-    [TestCase(false, false)]
-    public void Projection__Delegate__Rewriter(bool createInnerFromExpression, bool createFromExpression)
+    [TestCase(true, true, false)]
+    [TestCase(true, false, false)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, true)]
+    [TestCase(false, false, true)]
+    public void Projection__Delegate__Rewriter(bool createInnerFromExpression, bool createFromExpression, bool decompile)
     {
         var lengthPlusOne = Create<string, int>(
             createInnerFromExpression,
             x => x.Length + 1,
-            x => x.Length + 1
+            x => x.Length + 1,
+            decompile
         );
 
         var lengthPlusOnePlusOne = Create<string, int>(
             createFromExpression,
             x => lengthPlusOne.Project(x) + 1,
-            x => lengthPlusOne.Project(x) + 1
+            x => lengthPlusOne.Project(x) + 1,
+            decompile
         );
 
         Assert.That(lengthPlusOnePlusOne.Project("1"), Is.EqualTo(3));
@@ -363,7 +515,8 @@ public class ProjectionTest
     private Projection<TSource, TResult> Create<TSource, TResult>(
         bool createFromExpression,
         Expression<Func<TSource, TResult>> projectionExpression,
-        Func<TSource, TResult> projectionDelegate
+        Func<TSource, TResult> projectionDelegate,
+        bool decompile = false
     )
     {
         if (createFromExpression)
@@ -372,7 +525,7 @@ public class ProjectionTest
         }
         else
         {
-            return new Projection<TSource, TResult>(projectionExpression, projectionDelegate);
+            return new Projection<TSource, TResult>(decompile ? null : projectionExpression, projectionDelegate);
         }
     }
 

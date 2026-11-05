@@ -22,6 +22,9 @@ public sealed class SpecificationFactory<TSource, TParam1, TParam2> : ISpecifica
 
     private readonly Lazy<Func<TParam1, TParam2, Func<TSource, bool>>> _lazyDelegateFactory;
 
+    // true when delegates are compiled from expressions (no delegate factory was provided)
+    private readonly bool _compileDelegate;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SpecificationFactory{TSource, TParam1, TParam2}"/> class with an expression factory.
     /// </summary>
@@ -33,6 +36,8 @@ public sealed class SpecificationFactory<TSource, TParam1, TParam2> : ISpecifica
         _lazyExpressionFactory = new Lazy<Func<TParam1, TParam2, Expression<Func<TSource, bool>>>>(() => expressionFactory, LazyThreadSafetyMode.PublicationOnly);
 
         _lazyDelegateFactory = new Lazy<Func<TParam1, TParam2, Func<TSource, bool>>>(() => (x, y) => expressionFactory(x, y).Compile(), LazyThreadSafetyMode.PublicationOnly);
+
+        _compileDelegate = true;
     }
 
     /// <summary>
@@ -56,6 +61,9 @@ public sealed class SpecificationFactory<TSource, TParam1, TParam2> : ISpecifica
     /// <br/>
     /// Warning: can be used in expressions if expression factory does not contain conditional access.
     /// </summary>
+    /// <remarks>
+    /// Calling this method inside an expression is not supported. Call it outside the expression and use the result inside it.
+    /// </remarks>
     /// <param name="param1">The first parameter to apply.</param>
     /// <returns>A new <see cref="SpecificationFactory{TSource, TParam2}"/> that takes the remaining parameter.</returns>
     public SpecificationFactory<TSource, TParam2> For(TParam1 param1)
@@ -65,7 +73,8 @@ public sealed class SpecificationFactory<TSource, TParam1, TParam2> : ISpecifica
 
         return new(
             new Lazy<Func<TParam2, Expression<Func<TSource, bool>>>>(() => param2 => lazyExpressionFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TParam2, Func<TSource, bool>>>(() => param2 => lazyDelegateFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly)
+            new Lazy<Func<TParam2, Func<TSource, bool>>>(() => param2 => lazyDelegateFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly),
+            _compileDelegate
         );
     }
 
@@ -82,10 +91,14 @@ public sealed class SpecificationFactory<TSource, TParam1, TParam2> : ISpecifica
         var lazyExpressionFactory = _lazyExpressionFactory;
         var lazyDelegateFactory = _lazyDelegateFactory;
 
-        return new(
-            new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TSource, bool>>(() => lazyDelegateFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly)
-        );
+        var lazyExpression = new Lazy<Expression<Func<TSource, bool>>>(() => lazyExpressionFactory.Value(param1, param2).Rewrite(), LazyThreadSafetyMode.PublicationOnly);
+
+        // when no delegate factory was provided, compile the rewritten expression instead of invoking the expression factory again
+        var lazyDelegate = _compileDelegate
+            ? new Lazy<Func<TSource, bool>>(() => lazyExpression.Value.Compile(), LazyThreadSafetyMode.PublicationOnly)
+            : new Lazy<Func<TSource, bool>>(() => lazyDelegateFactory.Value(param1, param2), LazyThreadSafetyMode.PublicationOnly);
+
+        return new(lazyExpression, lazyDelegate);
     }
 
     ISpecificationFactoryInternal ISpecificationFactory2Internal.For(object? arg1)
@@ -109,7 +122,8 @@ public sealed class SpecificationFactory<TSource, TParam1, TParam2> : ISpecifica
             new Lazy<Func<TParam2, Expression<Func<TSource, bool>>>>(
                 () => param2 => lazyExpressionFactory.Value(value1, param2).BindArgument(arg1, lazyExpressionFactory.Value.Method.GetParameters()[0])
                     .BindArgument(Expression.Constant(param2), lazyExpressionFactory.Value.Method.GetParameters()[1]), LazyThreadSafetyMode.PublicationOnly),
-            new Lazy<Func<TParam2, Func<TSource, bool>>>(() => throw new NotSupportedException($"Parameter expressions: {arg1}"), LazyThreadSafetyMode.PublicationOnly)
+            new Lazy<Func<TParam2, Func<TSource, bool>>>(() => throw new NotSupportedException($"Parameter expressions: {arg1}"), LazyThreadSafetyMode.PublicationOnly),
+            compileDelegate: false
         );
     }
 

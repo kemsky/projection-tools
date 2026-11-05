@@ -14,9 +14,35 @@ internal sealed class SpecificationInvocationVisitor : ExpressionVisitor
 
     protected override Expression VisitInvocation(InvocationExpression invocationExpression)
     {
-        // replace IsSatisfiedBy invocation with spec expression body
+        if (TryInlineIsSatisfiedBy(invocationExpression.Expression, invocationExpression.Arguments, out var expression))
+        {
+            return expression;
+        }
+
+        return base.VisitInvocation(invocationExpression);
+    }
+
+    protected override Expression VisitMethodCall(MethodCallExpression node)
+    {
+        if (node.Method.HasName(nameof(Func<object, bool>.Invoke)) && TryInlineIsSatisfiedBy(node.Object, node.Arguments, out var expression))
+        {
+            return expression;
+        }
+
+        // do not rewrite specification instances passed as arguments, e.g. Helper(specification, x)
+        if (node.Method.GetParameters().Any(x => x.ParameterType.IsSpecificationType()))
+        {
+            return node.Update(VisitBase(node.Object), this.VisitArguments(node, x => x.IsSpecificationType()));
+        }
+
+        return base.VisitMethodCall(node);
+    }
+
+    private bool TryInlineIsSatisfiedBy(Expression? target, IReadOnlyList<Expression> arguments, [NotNullWhen(true)] out Expression? expression)
+    {
         if (
-            invocationExpression.Expression is MemberExpression memberExpression
+            arguments.Count == 1
+            && target is MemberExpression memberExpression
             && memberExpression.Expression != null
             && memberExpression.Member.IsSpecificationMember()
             && memberExpression.Member.HasName(nameof(Specification<object>.IsSatisfiedBy))
@@ -26,14 +52,16 @@ internal sealed class SpecificationInvocationVisitor : ExpressionVisitor
 
             var lambda = spec.GetExpression();
 
-            var replaceParameterVisitor = new ReplaceParameterVisitor(lambda.Parameters[0], invocationExpression.Arguments[0]);
+            var replaceParameterVisitor = new ReplaceParameterVisitor(lambda.Parameters[0], arguments[0]);
 
-            var expression = replaceParameterVisitor.Visit(lambda.Body);
+            expression = VisitBase(replaceParameterVisitor.Visit(lambda.Body));
 
-            return VisitBase(expression);
+            return true;
         }
 
-        return base.VisitInvocation(invocationExpression);
+        expression = null;
+
+        return false;
     }
 
     protected override Expression VisitMember(MemberExpression memberExpression)

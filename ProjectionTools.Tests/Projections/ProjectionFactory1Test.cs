@@ -85,6 +85,67 @@ public class ProjectionFactory1Test
         Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("C"));
     }
 
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__BoundParam__Changed(bool createFromExpression)
+    {
+        var projectionFactory = Create<ProjectedClass, string, string>(
+            createFromExpression,
+            param1 => y => y.Name == param1 ? "C" : "B",
+            param1 => y => y.Name == param1 ? "C" : "B"
+        );
+
+        var param = "A";
+
+        var projection = projectionFactory.For(() => param);
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("C"));
+
+        param = "B";
+
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("B"));
+    }
+
+    [Test]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ProjectionFactory__For__BoundParam__CompiledOnce(bool createFromExpression)
+    {
+        var expressionFactoryCalls = 0;
+
+        var projectionFactory = Create<ProjectedClass, string, string>(
+            createFromExpression,
+            param1 =>
+            {
+                expressionFactoryCalls++;
+
+                return y => y.Name == param1 ? "C" : "B";
+            },
+            param1 => y => y.Name == param1 ? "C" : "B"
+        );
+
+        var projection = projectionFactory.For(() => A);
+
+        for (var i = 0; i < 10; i++)
+        {
+            projection.Project(new ProjectedClass("A"));
+        }
+
+        Assert.That(expressionFactoryCalls, Is.LessThanOrEqualTo(1));
+    }
+
+    [Test]
+    public void ProjectionFactory__ForParamDelegate__Decompiled()
+    {
+        var projectionFactory = new ProjectionFactory<ProjectedClass, string, string>(null, a => y => y.Name == a ? "C" : "B");
+
+        var projection = projectionFactory.For(() => A);
+
+        Assert.That(projection.ProjectExpression.ToReadableString(), Is.EqualTo("y => (y.Name == A) ? \"C\" : \"B\""));
+        Assert.That(projection.Project(new ProjectedClass("A")), Is.EqualTo("C"));
+    }
+
     #endregion
 
     private ProjectionFactory<TSource, TResult, TParam> Create<TSource, TResult, TParam>(
