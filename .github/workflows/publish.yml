@@ -34,4 +34,4 @@ jobs:
       - name: Pack nugets
         run: dotnet pack -c Release --no-build --no-restore --output . ProjectionTools/ProjectionTools.csproj
       - name: Push nupkg to NuGet
-        run: dotnet nuget push "*.nupkg" ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push "*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
