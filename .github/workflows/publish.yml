@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -18,6 +20,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: Restore dependencies
         run: dotnet restore ProjectionTools.slnx
       - name: Build
@@ -27,4 +34,4 @@ jobs:
       - name: Pack nugets
         run: dotnet pack -c Release --no-build --no-restore --output . ProjectionTools/ProjectionTools.csproj
       - name: Push nupkg to NuGet
-        run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push "*.nupkg" ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
